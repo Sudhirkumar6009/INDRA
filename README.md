@@ -126,49 +126,11 @@ This repository should be treated as a national-scale climate intelligence syste
 - Keep the public architecture clear and consistent.
 - Prefer reusable patterns over one-off implementations.
 - Preserve strong typing and explicit contracts between client and server.
-- Favor maintainable abstractions that can evolve with new datasets and analytics needs.
-  │ │ │ ├── ui/ # Base UI components
-  │ │ │ ├── dashboard/ # Dashboard widgets
-  │ │ │ ├── maps/ # Map components
-  │ │ │ ├── charts/ # Chart components
-  │ │ │ └── common/ # Shared components
-  │ │ ├── hooks/ # Custom React hooks
-  │ │ ├── services/ # API services
-  │ │ ├── store/ # Zustand stores
-  │ │ ├── types/ # TypeScript types
-  │ │ ├── utils/ # Utility functions
-  │ │ └── styles/ # Global styles
-  │ └── package.json
-  │
-  ├── server/ # FastAPI backend
-  │ ├── app/
-  │ │ ├── api/ # API routes
-  │ │ ├── models/ # SQLAlchemy models
-  │ │ ├── schemas/ # Pydantic schemas
-  │ │ ├── services/ # Business logic
-  │ │ ├── database/ # DB connection
-  │ │ ├── middleware/ # Auth middleware
-  │ │ ├── auth/ # Authentication
-  │ │ └── utils/ # Utilities
-  │ └── requirements.txt
-  │
-  ├── ai-engine/ # AI/ML service
-  │ ├── app/
-  │ │ ├── models/ # ML models
-  │ │ ├── inference/ # Prediction logic
-  │ │ └── utils/ # Processing utils
-  │ └── requirements.txt
-  │
-  └── data-pipeline/ # ETL pipeline
-  ├── ingestion/
-  ├── processing/
-  └── storage/
-
-```
 
 ## 🔐 Environment Variables
 
 ### Client (.env.local)
+
 ```
 
 NEXT_PUBLIC_API_URL=http://localhost:8000
@@ -177,6 +139,7 @@ NEXT_PUBLIC_AI_ENGINE_URL=http://localhost:8001
 ```
 
 ### Server (.env)
+
 ```
 
 DATABASE_URL=postgresql://user:password@localhost:5432/indra
@@ -192,6 +155,7 @@ CORS_ORIGINS=http://localhost:3000
 ## 🧪 API Documentation
 
 Once the server is running, visit:
+
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
@@ -213,10 +177,6 @@ Once the server is running, visit:
 - [ ] Advanced visualization layers
 - [ ] Export to PDF/CSV reports
 
-## 🤝 Contributing
-
-This is a production-grade platform designed for national climate intelligence. Contributions should maintain high code quality and documentation standards.
-
 ## 📝 License
 
 MIT License - Open for research and development
@@ -230,5 +190,9 @@ MIT License - Open for research and development
 ---
 
 **Built with ❤️ for India's Climate Intelligence**
+
 #
+
+```
+
 ```
