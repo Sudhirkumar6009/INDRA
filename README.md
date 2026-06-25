@@ -307,7 +307,4 @@ MIT License - Open for research and development
 ---
 
 **Built with ❤️ for India's Climate Intelligence**
-#   I N D R A 
- 
- 
-```
+#
