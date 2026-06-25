@@ -9,11 +9,16 @@
   
   body {
     @apply bg-white text-gray-900;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-space-grotesk), sans-serif;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: var(--font-space-grotesk), sans-serif;
+    font-weight: 700;
+  }
+  
+  h1 {
+    font-weight: 700;
   }
 }
 

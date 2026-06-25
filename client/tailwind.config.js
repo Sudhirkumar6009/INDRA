@@ -16,6 +16,9 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['var(--font-space-grotesk)', 'sans-serif'],
+      },
       colors: {
         india: {
           saffron: '#FF9933',
