@@ -81,160 +81,181 @@ The platform follows a microservices architecture with four independent services
 ## 📦 Tech Stack
 
 ### Client
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **UI Components:** shadcn/ui
-- **State Management:** Zustand
-- **Data Fetching:** React Query
-- **Maps:** Leaflet / React-Leaflet
-- **Charts:** Recharts, Plotly.js
-- **Animations:** Framer Motion
+
+# INDRA Climate Intelligence Platform
+
+**Integrated National Digital Replica of Atmosphere**
+
+INDRA is an AI-powered digital twin of India's climate system designed for monitoring, analysis, forecasting, and scenario planning across national geospatial and meteorological datasets.
+
+## Official Scope
+
+The platform is built to support Indian climate intelligence workflows using sources such as IMD, INSAT, MOSDAC, Bhuvan, and future NICES integration. It combines interactive geospatial visualization, predictive analytics, historical exploration, and decision support in a production-ready full-stack architecture.
+
+## Technology Stack
+
+### Client
+
+- Next.js App Router
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- Framer Motion
+- Zustand
+- React Query
+- Axios
+- Leaflet or MapLibre GL JS
+- Plotly and Recharts
+- Responsive layouts
+- Dark and light mode support
+- Professional ISRO-inspired blue-white theme
 
 ### Server
-- **Framework:** FastAPI
-- **Database:** PostgreSQL + PostGIS
-- **Cache:** Redis
-- **ORM:** SQLAlchemy
-- **Authentication:** JWT
-- **Validation:** Pydantic
 
-### AI Engine
-- **Framework:** FastAPI
-- **ML Libraries:** TensorFlow, PyTorch, scikit-learn
-- **Models:** LSTM, Transformer, ConvLSTM
-- **Processing:** NumPy, Pandas
+- Python
+- FastAPI
+- Pydantic
+- SQLAlchemy
+- PostgreSQL with PostGIS
+- Redis
+- JWT authentication
+- Docker
+- REST APIs
+- OpenAPI documentation
+- Background jobs for preprocessing and ingestion
 
-### Data Pipeline
-- **ETL:** Python
-- **Sources:** IMD, INSAT, MOSDAC, Bhuvan
-- **Processing:** Pandas, NumPy
-- **Storage:** PostgreSQL
+## Core Modules
 
-## 🛠️ Setup Instructions
+The platform should provide complete frontend and backend support for:
 
-### Prerequisites
+- Landing page
+- Authentication
+- Dashboard
+- Interactive India climate map
+- Rainfall visualization
+- Temperature visualization
+- Satellite layer viewer
+- Climate timeline
+- AI prediction
+- Historical explorer
+- Climate comparison
+- District search
+- State search
+- What-if simulation
+- AI-generated climate insights
+- Climate risk scoring
+- Extreme weather alerts
+- Dataset explorer
+- Analytics dashboard
+- Report generation
+- User profile
+- Admin dashboard
+- API documentation
 
-- Node.js 18+
-- Python 3.10+
-- PostgreSQL 14+
-- Redis 7+
+## Backend APIs
 
-### 1. Clone Repository
+The backend should expose clean REST endpoints for:
 
-```bash
-git clone <repository-url>
-cd indra
-```
+- Authentication
+- Dashboard
+- Predictions
+- Simulations
+- Historical climate
+- Analytics
+- Reports
+- Alerts
+- Datasets
+- User management
 
-### 2. Client Setup
+All APIs should include validation, pagination, filtering, logging, caching, and consistent error handling.
 
-```bash
-cd client
-npm install
-cp .env.example .env.local
-# Edit .env.local with your configuration
-npm run dev
-```
+## Quality Requirements
 
-Client runs on `http://localhost:3000`
+- Modular architecture
+- Feature-based folder structure
+- Strong TypeScript typing
+- Reusable UI components
+- Responsive layouts
+- Accessibility
+- Optimized performance
+- Clean API contracts
+- Environment configuration
+- Docker support
+- Unit and integration tests
+- Production-ready code standards
 
-### 3. Server Setup
+## Repository Layout
 
-```bash
-cd server
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your database configuration
-uvicorn app.main:app --reload --port 8000
-```
+This workspace is organized to support a full-stack implementation across separate layers:
 
-Server runs on `http://localhost:8000`
+- `client/` for the web application
+- `server/` for API services
+- `ai-engine/` for model-serving and prediction workflows
+- `data-pipeline/` for ingestion, preprocessing, and dataset preparation
 
-### 4. AI Engine Setup
+## Product Intent
 
-```bash
-cd ai-engine
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
-```
+This repository should be treated as a national-scale climate intelligence system, not a demo shell. Every screen, component, route, API, state flow, and integration should be implemented with production expectations so the platform can be demonstrated to domain experts and scaled over time.
 
-AI Engine runs on `http://localhost:8001`
+## Notes For Contributors
 
-### 5. Database Setup
+- Keep the public architecture clear and consistent.
+- Prefer reusable patterns over one-off implementations.
+- Preserve strong typing and explicit contracts between client and server.
+- Favor maintainable abstractions that can evolve with new datasets and analytics needs.
+  │ │ │ ├── ui/ # Base UI components
+  │ │ │ ├── dashboard/ # Dashboard widgets
+  │ │ │ ├── maps/ # Map components
+  │ │ │ ├── charts/ # Chart components
+  │ │ │ └── common/ # Shared components
+  │ │ ├── hooks/ # Custom React hooks
+  │ │ ├── services/ # API services
+  │ │ ├── store/ # Zustand stores
+  │ │ ├── types/ # TypeScript types
+  │ │ ├── utils/ # Utility functions
+  │ │ └── styles/ # Global styles
+  │ └── package.json
+  │
+  ├── server/ # FastAPI backend
+  │ ├── app/
+  │ │ ├── api/ # API routes
+  │ │ ├── models/ # SQLAlchemy models
+  │ │ ├── schemas/ # Pydantic schemas
+  │ │ ├── services/ # Business logic
+  │ │ ├── database/ # DB connection
+  │ │ ├── middleware/ # Auth middleware
+  │ │ ├── auth/ # Authentication
+  │ │ └── utils/ # Utilities
+  │ └── requirements.txt
+  │
+  ├── ai-engine/ # AI/ML service
+  │ ├── app/
+  │ │ ├── models/ # ML models
+  │ │ ├── inference/ # Prediction logic
+  │ │ └── utils/ # Processing utils
+  │ └── requirements.txt
+  │
+  └── data-pipeline/ # ETL pipeline
+  ├── ingestion/
+  ├── processing/
+  └── storage/
 
-```bash
-# Create PostgreSQL database
-createdb indra
-
-# Install PostGIS extension
-psql indra -c "CREATE EXTENSION postgis;"
-
-# Run migrations (if using Alembic)
-cd server
-alembic upgrade head
-```
-
-## 📁 Project Structure
-
-```
-indra/
-├── client/                    # Next.js frontend
-│   ├── src/
-│   │   ├── app/              # Next.js pages
-│   │   ├── components/       # React components
-│   │   │   ├── ui/          # Base UI components
-│   │   │   ├── dashboard/   # Dashboard widgets
-│   │   │   ├── maps/        # Map components
-│   │   │   ├── charts/      # Chart components
-│   │   │   └── common/      # Shared components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── services/        # API services
-│   │   ├── store/           # Zustand stores
-│   │   ├── types/           # TypeScript types
-│   │   ├── utils/           # Utility functions
-│   │   └── styles/          # Global styles
-│   └── package.json
-│
-├── server/                   # FastAPI backend
-│   ├── app/
-│   │   ├── api/             # API routes
-│   │   ├── models/          # SQLAlchemy models
-│   │   ├── schemas/         # Pydantic schemas
-│   │   ├── services/        # Business logic
-│   │   ├── database/        # DB connection
-│   │   ├── middleware/      # Auth middleware
-│   │   ├── auth/            # Authentication
-│   │   └── utils/           # Utilities
-│   └── requirements.txt
-│
-├── ai-engine/               # AI/ML service
-│   ├── app/
-│   │   ├── models/          # ML models
-│   │   ├── inference/       # Prediction logic
-│   │   └── utils/           # Processing utils
-│   └── requirements.txt
-│
-└── data-pipeline/           # ETL pipeline
-    ├── ingestion/
-    ├── processing/
-    └── storage/
 ```
 
 ## 🔐 Environment Variables
 
 ### Client (.env.local)
 ```
+
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_AI_ENGINE_URL=http://localhost:8001
+
 ```
 
 ### Server (.env)
 ```
+
 DATABASE_URL=postgresql://user:password@localhost:5432/indra
 REDIS_URL=redis://localhost:6379
 SECRET_KEY=your-secret-key
@@ -242,6 +263,7 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 AI_ENGINE_URL=http://localhost:8001
 CORS_ORIGINS=http://localhost:3000
+
 ```
 
 ## 🧪 API Documentation
@@ -285,5 +307,7 @@ MIT License - Open for research and development
 ---
 
 **Built with ❤️ for India's Climate Intelligence**
-#   I N D R A  
+#   I N D R A 
  
+ 
+```
