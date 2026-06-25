@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv
+
+# Environment
+.env
+.env.local
+
+# Models
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+saved_models/
+checkpoints/
+models/*.h5
+models/*.pkl
+
+# Training data
+data/
+*.csv
+*.npy
+*.npz
+
+# Tensorboard
+runs/
+logs/
+
+# MLflow
+mlruns/
+
+# Weights & Biases
+wandb/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Distribution
+dist/
+build/
+*.egg-info/
