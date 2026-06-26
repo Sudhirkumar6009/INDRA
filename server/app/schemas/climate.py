@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
-from uuid import UUID
 
 class ClimateDataBase(BaseModel):
     region: str
@@ -14,11 +13,11 @@ class ClimateDataBase(BaseModel):
     humidity: Optional[float] = None
     wind_speed: Optional[float] = None
     cloud_coverage: Optional[float] = None
-    lat: float
-    lon: float
+    lat: Optional[float] = None
+    lon: Optional[float] = None
 
 class ClimateDataResponse(ClimateDataBase):
-    id: UUID
+    id: str
     source: Optional[str] = None
     created_at: datetime
 
@@ -32,7 +31,7 @@ class PredictionRequest(BaseModel):
     date: str
 
 class PredictionResponse(BaseModel):
-    id: UUID
+    id: str
     region: str
     date: str
     predicted_rainfall: float
@@ -48,7 +47,7 @@ class SimulationRequest(BaseModel):
     rainfall_change: Optional[float] = 0
 
 class SimulationResponse(BaseModel):
-    id: UUID
+    id: str
     region: str
     scenario: str
     temp_change: float

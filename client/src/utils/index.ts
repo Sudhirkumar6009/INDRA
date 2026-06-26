@@ -22,26 +22,26 @@ export function formatRainfall(rainfall: number): string {
 }
 
 export function getRiskColor(score: number): string {
-  if (score >= 80) return 'text-red-600';
-  if (score >= 60) return 'text-orange-600';
-  if (score >= 40) return 'text-yellow-600';
-  return 'text-green-600';
+  if (score >= 80) return 'text-green-800';
+  if (score >= 60) return 'text-green-700';
+  if (score >= 40) return 'text-green-600';
+  return 'text-green-500';
 }
 
 export function getTempColor(temp: number): string {
-  if (temp >= 40) return '#ff4444';
-  if (temp >= 35) return '#ff8844';
-  if (temp >= 25) return '#ffcc44';
-  if (temp >= 15) return '#4488ff';
-  return '#4444ff';
+  if (temp >= 40) return '#166534';
+  if (temp >= 35) return '#15803d';
+  if (temp >= 25) return '#16a34a';
+  if (temp >= 15) return '#22c55e';
+  return '#4ade80';
 }
 
 export function getRainfallColor(rainfall: number): string {
-  if (rainfall >= 200) return '#0000ff';
-  if (rainfall >= 100) return '#4444ff';
-  if (rainfall >= 50) return '#8888ff';
-  if (rainfall >= 10) return '#ccccff';
-  return '#f0f0f0';
+  if (rainfall >= 200) return '#166534';
+  if (rainfall >= 100) return '#15803d';
+  if (rainfall >= 50) return '#16a34a';
+  if (rainfall >= 10) return '#22c55e';
+  return '#86efac';
 }
 
 export function calculateAnomaly(current: number, historical: number): number {

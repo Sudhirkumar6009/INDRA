@@ -35,7 +35,7 @@ export default function Home() {
   const datasets = ['IMD', 'INSAT', 'MOSDAC', 'Bhuvan'];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-green-50 dark:bg-green-950">
       <Navbar />
       
       {/* Hero Section */}
@@ -55,8 +55,8 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
                 <h1 className="text-7xl md:text-9xl font-bold mb-2">
-                  <span className="text-india-saffron">IND</span>
-                  <span className="text-india-green">RA</span>
+                  <span className="text-green-600">IND</span>
+                  <span className="text-green-700">RA</span>
                 </h1>
               </motion.div>
 
@@ -64,7 +64,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+                className="text-3xl md:text-4xl font-bold text-green-900 dark:text-green-50 mb-4"
               >
                 Integrated National Digital Replica of Atmosphere
               </motion.h2>
@@ -73,7 +73,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto"
+                className="text-xl text-green-700 dark:text-green-300 mb-8 max-w-3xl mx-auto"
               >
                 AI-Powered Climate Intelligence Platform for Monitoring, Prediction & Scenario Analysis
               </motion.p>
@@ -86,7 +86,7 @@ export default function Home() {
                 <Link href="/dashboard">
                   <Button 
                     size="lg" 
-                    className="bg-india-saffron hover:bg-india-saffron/90 text-white text-lg px-8 py-6 shadow-lg hover:shadow-xl"
+                    className="bg-green-600 hover:bg-green-600/90 text-white text-lg px-8 py-6 shadow-lg hover:shadow-xl"
                   >
                     Launch Dashboard
                   </Button>
@@ -107,11 +107,11 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1 + idx * 0.1 }}
-                  className="bg-white border border-gray-200 rounded-xl p-6 hover:border-india-saffron hover:shadow-lg transition-all cursor-pointer"
+                  className="bg-white dark:bg-green-900 border border-green-200 dark:border-green-800 rounded-xl p-6 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer"
                 >
-                  <stat.icon className="h-8 w-8 mx-auto mb-3 text-india-saffron" />
-                  <div className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
+                  <stat.icon className="h-8 w-8 mx-auto mb-3 text-green-600" />
+                  <div className="text-3xl font-bold text-green-900 dark:text-green-50 mb-1">{stat.value}</div>
+                  <div className="text-sm text-green-700 dark:text-green-400">{stat.label}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -119,7 +119,7 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-green-100 dark:bg-green-900">
           <div className="max-w-7xl mx-auto px-6">
             <motion.div
               initial={{ opacity: 0 }}
@@ -127,10 +127,10 @@ export default function Home() {
               viewport={{ once: true }}
               className="text-center mb-16"
             >
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl font-bold text-green-900 dark:text-green-50 mb-4">
                 Platform Capabilities
               </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              <p className="text-xl text-green-700 dark:text-green-300 max-w-2xl mx-auto">
                 Comprehensive climate intelligence powered by India's national datasets
               </p>
             </motion.div>
@@ -143,15 +143,15 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.2 }}
-                  className="bg-white border border-gray-200 rounded-xl p-8 hover:border-india-green hover:shadow-xl transition-all"
+                  className="bg-white dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-8 hover:border-green-600 hover:shadow-xl transition-all"
                 >
-                  <div className="bg-india-green/10 w-14 h-14 rounded-lg flex items-center justify-center mb-6">
-                    <feature.icon className="h-7 w-7 text-india-green" />
+                  <div className="bg-green-600/10 w-14 h-14 rounded-lg flex items-center justify-center mb-6">
+                    <feature.icon className="h-7 w-7 text-green-600" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-2xl font-bold text-green-900 dark:text-green-50 mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-green-700 dark:text-green-300 leading-relaxed">
                     {feature.description}
                   </p>
                 </motion.div>
@@ -161,7 +161,7 @@ export default function Home() {
         </section>
 
         {/* Datasets Section */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-green-50 dark:bg-green-950">
           <div className="max-w-7xl mx-auto px-6">
             <motion.div
               initial={{ opacity: 0 }}
@@ -169,10 +169,10 @@ export default function Home() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl font-bold text-green-900 dark:text-green-50 mb-4">
                 Integrated Data Sources
               </h2>
-              <p className="text-xl text-gray-600">
+              <p className="text-xl text-green-700 dark:text-green-300">
                 Powered by ISRO and IMD national infrastructure
               </p>
             </motion.div>
@@ -185,9 +185,9 @@ export default function Home() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-white border-2 border-gray-200 rounded-xl p-6 text-center hover:border-india-saffron hover:shadow-lg transition-all"
+                  className="bg-white dark:bg-green-900 border-2 border-green-200 dark:border-green-800 rounded-xl p-6 text-center hover:border-green-500 hover:shadow-lg transition-all"
                 >
-                  <div className="text-2xl font-bold text-gray-900">{dataset}</div>
+                  <div className="text-2xl font-bold text-green-900 dark:text-green-50">{dataset}</div>
                 </motion.div>
               ))}
             </div>
@@ -195,35 +195,35 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-green-100 dark:bg-green-900">
           <div className="max-w-4xl mx-auto text-center px-6">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              <h2 className="text-4xl font-bold text-green-900 dark:text-green-50 mb-6">
                 Start Exploring Climate Intelligence
               </h2>
-              <p className="text-xl text-gray-600 mb-8">
+              <p className="text-xl text-green-700 dark:text-green-300 mb-8">
                 Access real-time data, AI predictions, and scenario simulations
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/dashboard">
                   <Button 
                     size="lg" 
-                    className="bg-india-saffron hover:bg-india-saffron/90 text-white px-8"
+                    className="bg-green-600 hover:bg-green-600/90 text-white px-8"
                   >
                     View Dashboard
                   </Button>
                 </Link>
-                <Link href="/analytics">
+                <Link href="/auth">
                   <Button 
                     size="lg" 
                     variant="outline"
-                    className="border-india-green text-india-green hover:bg-india-green hover:text-white px-8"
+                    className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-8"
                   >
-                    Explore Analytics
+                    Get Started
                   </Button>
                 </Link>
               </div>
@@ -233,15 +233,15 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8">
+      <footer className="bg-white dark:bg-green-950 border-t border-green-200 dark:border-green-900 py-8">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <span className="text-2xl font-bold">
-              <span className="text-india-saffron">IND</span>
-              <span className="text-india-green">RA</span>
+              <span className="text-green-600">IND</span>
+              <span className="text-green-700">RA</span>
             </span>
           </div>
-          <p className="text-gray-600">
+          <p className="text-green-700 dark:text-green-400">
             &copy; 2024 INDRA Climate Intelligence Platform. Powered by ISRO & IMD Data
           </p>
         </div>

@@ -1,6 +1,4 @@
-from sqlalchemy import Column, String, Float, DateTime, Integer
-from sqlalchemy.dialects.postgresql import UUID
-from geoalchemy2 import Geometry
+from sqlalchemy import Column, String, Float, DateTime
 from datetime import datetime
 import uuid
 from app.database.db import Base
@@ -8,7 +6,7 @@ from app.database.db import Base
 class ClimateData(Base):
     __tablename__ = "climate_data"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     region = Column(String, nullable=False, index=True)
     state = Column(String, nullable=False, index=True)
     district = Column(String, nullable=False, index=True)
@@ -21,7 +19,8 @@ class ClimateData(Base):
     wind_speed = Column(Float)
     cloud_coverage = Column(Float)
     
-    location = Column(Geometry('POINT', srid=4326))
+    lat = Column(Float)
+    lon = Column(Float)
     
     source = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
