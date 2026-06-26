@@ -15,7 +15,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <button className="w-10 h-10 rounded-lg border border-green-200 dark:border-green-800" />
+      <button className="w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-700" />
     );
   }
 
@@ -25,7 +25,7 @@ export function ThemeToggle() {
     <motion.button
       whileTap={{ scale: 0.95 }}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="relative w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900 border border-green-200 dark:border-green-800 flex items-center justify-center hover:border-green-500 dark:hover:border-green-500 transition-all overflow-hidden"
+      className="relative w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:border-green-500 dark:hover:border-green-500 transition-all overflow-hidden"
       aria-label="Toggle theme"
     >
       <motion.div
@@ -48,7 +48,7 @@ export function ThemeToggle() {
         transition={{ duration: 0.3 }}
         className="absolute"
       >
-        <Moon className="h-5 w-5 text-green-300" />
+        <Moon className="h-5 w-5 text-blue-500" />
       </motion.div>
     </motion.button>
   );

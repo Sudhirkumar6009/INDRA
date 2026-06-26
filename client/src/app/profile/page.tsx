@@ -10,7 +10,7 @@ export default function ProfilePage() {
   const { auth } = useAppStore();
 
   return (
-    <div className="min-h-screen bg-green-50 dark:bg-green-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       
       <main className="pt-20 pb-12 px-6">
@@ -20,8 +20,8 @@ export default function ProfilePage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <h1 className="text-4xl font-bold text-green-900 dark:text-green-50 mb-2">User Profile</h1>
-            <p className="text-green-700 dark:text-green-400">Manage your account information</p>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">User Profile</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage your account information</p>
           </motion.div>
 
           <motion.div
@@ -31,28 +31,28 @@ export default function ProfilePage() {
           >
             <Card>
               <CardHeader>
-                <CardTitle className="dark:text-green-50">Account Details</CardTitle>
+                <CardTitle className="dark:text-white">Account Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-green-100 dark:bg-green-800 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <User className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-400">Name</p>
-                    <p className="font-semibold dark:text-green-50">{auth.user?.name || 'Guest User'}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Name</p>
+                    <p className="font-semibold dark:text-white">{auth.user?.name || 'Guest User'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-green-100 dark:bg-green-800 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <Mail className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-400">Email</p>
-                    <p className="font-semibold dark:text-green-50">{auth.user?.email || 'guest@indra.gov.in'}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
+                    <p className="font-semibold dark:text-white">{auth.user?.email || 'guest@indra.gov.in'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-green-100 dark:bg-green-800 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <Calendar className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-400">Member Since</p>
-                    <p className="font-semibold dark:text-green-50">{auth.user?.createdAt ? new Date(auth.user.createdAt).toLocaleDateString('en-IN') : 'Today'}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Member Since</p>
+                    <p className="font-semibold dark:text-white">{auth.user?.createdAt ? new Date(auth.user.createdAt).toLocaleDateString('en-IN') : 'Today'}</p>
                   </div>
                 </div>
               </CardContent>

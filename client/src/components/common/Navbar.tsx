@@ -24,15 +24,18 @@ export const Navbar = () => {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 w-full bg-white/95 dark:bg-green-950/95 backdrop-blur-sm border-b border-green-100 dark:border-green-900 z-50 shadow-sm"
+      className="fixed top-0 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 z-50 shadow-sm"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <div className="flex items-center font-bold text-2xl">
-              <span className="text-green-600">IND</span>
-              <span className="text-green-700">RA</span>
+            <div className="flex items-center font-bold text-2xl tracking-wide">
+              <span className="text-[#FF9933]">I</span>
+              <span className="text-gray-900 dark:text-white">N</span>
+              <span className="text-green-600">D</span>
+              <span className="text-blue-600">R</span>
+              <span className="text-blue-600">A</span>
             </div>
           </Link>
 
@@ -42,7 +45,7 @@ export const Navbar = () => {
               <Link
                 key={link.name}
                 href={link.href}
-                className="px-4 py-2 text-green-700 dark:text-green-300 hover:text-green-600 dark:hover:text-green-400 font-medium rounded-lg hover:bg-green-50 dark:hover:bg-green-900 transition-all"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
               >
                 {link.name}
               </Link>
@@ -53,7 +56,7 @@ export const Navbar = () => {
             {auth.isAuthenticated ? (
               <div className="flex items-center space-x-2 ml-4">
                 <Link href="/profile">
-                  <Button variant="ghost" size="icon" className="hover:bg-green-50 dark:hover:bg-green-900">
+                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800">
                     <User className="h-5 w-5" />
                   </Button>
                 </Link>
@@ -67,7 +70,7 @@ export const Navbar = () => {
               </div>
             ) : (
               <Link href="/auth" className="ml-4">
-                <Button className="bg-green-600 hover:bg-green-600/90 text-white">
+                <Button className="bg-green-600 hover:bg-green-700 text-white">
                   Login
                 </Button>
               </Link>
@@ -79,7 +82,7 @@ export const Navbar = () => {
             <ThemeToggle />
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900"
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -101,7 +104,7 @@ export const Navbar = () => {
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className="block px-4 py-2 text-green-700 dark:text-green-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg font-medium"
+                    className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg font-medium"
                   >
                     {link.name}
                   </Link>
@@ -116,7 +119,7 @@ export const Navbar = () => {
                   </Button>
                 ) : (
                   <Link href="/auth" onClick={() => setIsOpen(false)}>
-                    <Button className="w-full bg-green-600 hover:bg-green-600/90">
+                    <Button className="w-full bg-green-600 hover:bg-green-700">
                       Login
                     </Button>
                   </Link>

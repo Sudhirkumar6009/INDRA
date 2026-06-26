@@ -17,16 +17,16 @@ export default function MapPage() {
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
 
   const layers: { id: MapLayer; label: string; color: string }[] = [
-    { id: 'rainfall', label: 'Rainfall', color: 'bg-green-600' },
-    { id: 'maxTemp', label: 'Max Temperature', color: 'bg-green-500' },
-    { id: 'minTemp', label: 'Min Temperature', color: 'bg-green-400' },
-    { id: 'humidity', label: 'Humidity', color: 'bg-green-300' },
-    { id: 'clouds', label: 'Cloud Coverage', color: 'bg-green-700' },
-    { id: 'wind', label: 'Wind Speed', color: 'bg-green-800' },
+    { id: 'rainfall', label: 'Rainfall', color: 'bg-blue-500' },
+    { id: 'maxTemp', label: 'Max Temperature', color: 'bg-red-500' },
+    { id: 'minTemp', label: 'Min Temperature', color: 'bg-orange-500' },
+    { id: 'humidity', label: 'Humidity', color: 'bg-teal-500' },
+    { id: 'clouds', label: 'Cloud Coverage', color: 'bg-gray-500' },
+    { id: 'wind', label: 'Wind Speed', color: 'bg-purple-500' },
   ];
 
   return (
-    <div className="min-h-screen bg-green-50 dark:bg-green-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       
       <main className="pt-20 pb-12 px-6">
@@ -36,8 +36,8 @@ export default function MapPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <h1 className="text-4xl font-bold text-green-900 dark:text-green-50 mb-2">Interactive Climate Map</h1>
-            <p className="text-green-700 dark:text-green-400">Explore India's climate data by state and district</p>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Interactive Climate Map</h1>
+            <p className="text-gray-600 dark:text-gray-400">Explore India&apos;s climate data by state and district</p>
           </motion.div>
 
           <div className="grid lg:grid-cols-4 gap-6">
@@ -61,13 +61,13 @@ export default function MapPage() {
                       onClick={() => setMapLayer(layer.id)}
                       className={`w-full text-left p-3 rounded-lg border transition-all ${
                         mapState.activeLayer === layer.id
-                          ? 'border-green-500 bg-green-600/5'
-                          : 'border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700'
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded ${layer.color}`} />
-                        <span className="font-semibold dark:text-green-50">{layer.label}</span>
+                        <span className="font-semibold dark:text-white">{layer.label}</span>
                       </div>
                     </button>
                   ))}
@@ -84,20 +84,20 @@ export default function MapPage() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div>
-                      <p className="text-sm text-green-700 dark:text-green-400">State</p>
-                      <p className="font-semibold dark:text-green-50">{selectedLocation.state}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">State</p>
+                      <p className="font-semibold dark:text-white">{selectedLocation.state}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-green-700 dark:text-green-400">District</p>
-                      <p className="font-semibold dark:text-green-50">{selectedLocation.district}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">District</p>
+                      <p className="font-semibold dark:text-white">{selectedLocation.district}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-green-700 dark:text-green-400">Rainfall</p>
-                      <p className="font-semibold dark:text-green-50">{selectedLocation.rainfall} mm</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Rainfall</p>
+                      <p className="font-semibold dark:text-white">{selectedLocation.rainfall} mm</p>
                     </div>
                     <div>
-                      <p className="text-sm text-green-700 dark:text-green-400">Temperature</p>
-                      <p className="font-semibold dark:text-green-50">{selectedLocation.temp}°C</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Temperature</p>
+                      <p className="font-semibold dark:text-white">{selectedLocation.temp}°C</p>
                     </div>
                   </CardContent>
                 </Card>

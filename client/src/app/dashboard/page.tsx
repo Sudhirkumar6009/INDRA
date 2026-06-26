@@ -29,14 +29,14 @@ export default function DashboardPage() {
   ];
 
   const severityColor = {
-    low: 'bg-green-100 text-green-700 border-green-300',
-    medium: 'bg-green-200 text-green-800 border-green-400',
-    high: 'bg-green-300 text-green-900 border-green-500',
-    critical: 'bg-green-400 text-green-950 border-green-600',
+    low: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    medium: 'bg-orange-100 text-orange-800 border-orange-200',
+    high: 'bg-red-100 text-red-800 border-red-200',
+    critical: 'bg-red-200 text-red-900 border-red-300',
   };
 
   return (
-    <div className="min-h-screen bg-green-50 dark:bg-green-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       
       <main className="pt-20 pb-12 px-6">
@@ -46,8 +46,8 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-4xl font-bold text-green-900 dark:text-green-50 mb-2">Climate Dashboard</h1>
-            <p className="text-green-700 dark:text-green-400">National climate intelligence overview for India</p>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Climate Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-400">National climate intelligence overview for India</p>
           </motion.div>
 
           {/* Stats Grid */}
@@ -58,17 +58,17 @@ export default function DashboardPage() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
           >
             {stats.map((stat, idx) => (
-              <Card key={idx} className="hover:border-green-500 transition-all dark:bg-green-900 dark:border-green-800">
+              <Card key={idx} className="hover:border-green-500 transition-all dark:bg-gray-800 dark:border-gray-700">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm text-green-700 dark:text-green-400 mb-1">{stat.label}</p>
-                      <p className="text-3xl font-bold text-green-900 dark:text-green-50">{stat.value}</p>
-                      <p className={`text-sm mt-2 ${stat.trend === 'up' ? 'text-green-800' : 'text-green-600'}`}>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                      <p className={`text-sm mt-2 ${stat.trend === 'up' ? 'text-red-600' : 'text-green-600'}`}>
                         {stat.change}
                       </p>
                     </div>
-                    <div className="bg-green-600/10 p-3 rounded-lg">
+                    <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-lg">
                       <stat.icon className="h-6 w-6 text-green-600" />
                     </div>
                   </div>
@@ -87,7 +87,7 @@ export default function DashboardPage() {
             >
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 dark:text-green-50">
+                  <CardTitle className="flex items-center gap-2 dark:text-white">
                     <AlertTriangle className="h-6 w-6 text-green-600" />
                     Active Alerts
                   </CardTitle>
@@ -121,24 +121,24 @@ export default function DashboardPage() {
             >
               <Card>
                 <CardHeader>
-                  <CardTitle className="dark:text-green-50">Today's Summary</CardTitle>
+                  <CardTitle className="dark:text-white">Today&apos;s Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-400">Date</p>
-                    <p className="text-lg font-semibold dark:text-green-50">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Date</p>
+                    <p className="text-lg font-semibold dark:text-white">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-400">Active Alerts</p>
-                    <p className="text-lg font-semibold dark:text-green-50">{alerts.length}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Active Alerts</p>
+                    <p className="text-lg font-semibold dark:text-white">{alerts.length}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-400">States Monitored</p>
-                    <p className="text-lg font-semibold dark:text-green-50">36</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">States Monitored</p>
+                    <p className="text-lg font-semibold dark:text-white">36</p>
                   </div>
                   <div>
-                    <p className="text-sm text-green-700 dark:text-green-400">Data Sources</p>
-                    <p className="text-lg font-semibold dark:text-green-50">IMD, INSAT, MOSDAC</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Data Sources</p>
+                    <p className="text-lg font-semibold dark:text-white">IMD, INSAT, MOSDAC</p>
                   </div>
                 </CardContent>
               </Card>
@@ -151,17 +151,17 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <h2 className="text-2xl font-bold text-green-900 dark:text-green-50 mb-4">Quick Access</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Quick Access</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {quickActions.map((action, idx) => (
                 <Link key={idx} href={action.href}>
-                  <Card className="hover:border-green-500 hover:shadow-lg transition-all cursor-pointer h-full dark:bg-green-900 dark:border-green-800">
+                  <Card className="hover:border-green-500 hover:shadow-lg transition-all cursor-pointer h-full dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="p-6">
                       <div className={`bg-${action.color}/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
                         <action.icon className={`h-6 w-6 text-${action.color}`} />
                       </div>
-                      <h3 className="font-bold text-lg mb-2 dark:text-green-50">{action.title}</h3>
-                      <p className="text-sm text-green-700 dark:text-green-400">{action.description}</p>
+                      <h3 className="font-bold text-lg mb-2 dark:text-white">{action.title}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{action.description}</p>
                     </CardContent>
                   </Card>
                 </Link>

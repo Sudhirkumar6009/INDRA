@@ -7,11 +7,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-green-600 text-white hover:bg-green-600/90 shadow-sm hover:shadow-md',
-        destructive: 'bg-green-700 text-white hover:bg-green-800',
-        outline: 'border-2 border-green-300 dark:border-green-700 bg-white dark:bg-green-900 hover:bg-green-50 dark:hover:bg-green-800 text-green-900 dark:text-green-50',
-        secondary: 'bg-green-700 text-white hover:bg-green-700/90 shadow-sm hover:shadow-md',
-        ghost: 'hover:bg-green-50 dark:hover:bg-green-800 text-green-700 dark:text-green-300',
+        default: 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow-md',
+        destructive: 'bg-red-600 text-white hover:bg-red-700',
+        outline: 'border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100',
+        secondary: 'bg-green-700 text-white hover:bg-green-800 shadow-sm hover:shadow-md',
+        ghost: 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300',
         link: 'text-green-600 underline-offset-4 hover:underline',
       },
       size: {

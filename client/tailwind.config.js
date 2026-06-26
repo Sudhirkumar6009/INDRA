@@ -16,15 +16,12 @@ module.exports = {
       },
     },
     extend: {
-      fontFamily: {
-        sans: ['var(--font-space-grotesk)', 'sans-serif'],
-      },
       colors: {
-        border: '#bbf7d0',
-        input: '#bbf7d0',
-        ring: '#22c55e',
-        background: '#f0fdf4',
-        foreground: '#14532d',
+        border: '#e5e7eb',
+        input: '#e5e7eb',
+        ring: '#16a34a',
+        background: '#ffffff',
+        foreground: '#1f2937',
         primary: {
           DEFAULT: '#16a34a',
           foreground: '#ffffff',
@@ -34,13 +31,22 @@ module.exports = {
           foreground: '#ffffff',
         },
         muted: {
-          DEFAULT: '#dcfce7',
-          foreground: '#16a34a',
+          DEFAULT: '#f3f4f6',
+          foreground: '#6b7280',
         },
         accent: {
-          DEFAULT: '#f0fdf4',
-          foreground: '#14532d',
+          DEFAULT: '#f9fafb',
+          foreground: '#1f2937',
         },
+      },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.6s ease-out',
       },
     },
   },

@@ -42,7 +42,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-green-50 dark:bg-green-950 flex items-center justify-center px-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -50,12 +50,15 @@ export default function AuthPage() {
           className="text-center mb-8"
         >
           <Link href="/">
-            <h1 className="text-5xl font-bold mb-2 cursor-pointer">
-              <span className="text-green-600">IND</span>
-              <span className="text-green-700">RA</span>
+            <h1 className="text-5xl font-bold mb-2 cursor-pointer tracking-wide">
+              <span className="text-[#FF9933]">I</span>
+              <span className="text-gray-900 dark:text-white">N</span>
+              <span className="text-green-600">D</span>
+              <span className="text-blue-600">R</span>
+              <span className="text-blue-600">A</span>
             </h1>
           </Link>
-          <p className="text-green-700 dark:text-green-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Climate Intelligence Platform
           </p>
         </motion.div>
@@ -64,7 +67,7 @@ export default function AuthPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-green-900 rounded-2xl shadow-xl border border-green-200 dark:border-green-800 p-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8"
         >
           <div className="flex gap-2 mb-6">
             <button
@@ -72,7 +75,7 @@ export default function AuthPage() {
               className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
                 isLogin
                   ? "bg-green-600 text-white"
-                  : "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
               }`}
             >
               Login
@@ -82,7 +85,7 @@ export default function AuthPage() {
               className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
                 !isLogin
                   ? "bg-green-600 text-white"
-                  : "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
               }`}
             >
               Sign Up
@@ -92,16 +95,16 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-semibold text-green-700 dark:text-green-300 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="pl-10 dark:bg-green-900 dark:border-green-700 dark:text-green-50"
+                    className="pl-10 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                     placeholder="Enter your name"
                     required={!isLogin}
                   />
@@ -110,16 +113,16 @@ export default function AuthPage() {
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-green-700 dark:text-green-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 dark:bg-green-900 dark:border-green-700 dark:text-green-50"
+                  className="pl-10 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                   placeholder="Enter your email"
                   required
                 />
@@ -127,16 +130,16 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-green-700 dark:text-green-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 dark:bg-green-900 dark:border-green-700 dark:text-green-50"
+                  className="pl-10 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                   placeholder="Enter your password"
                   required
                 />
@@ -151,10 +154,10 @@ export default function AuthPage() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-green-300 dark:border-green-700"></div>
+              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-green-900 text-green-500 dark:text-green-400">
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
                 Or continue with
               </span>
             </div>
@@ -164,7 +167,7 @@ export default function AuthPage() {
             type="button"
             onClick={handleGoogleLogin}
             variant="outline"
-            className="w-full border-2 hover:bg-green-50 dark:hover:bg-green-800 dark:border-green-700"
+            className="w-full border-2 hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600"
             size="lg"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -202,7 +205,7 @@ export default function AuthPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="text-center text-green-700 dark:text-green-400 text-sm mt-6"
+          className="text-center text-gray-600 dark:text-gray-400 text-sm mt-6"
         >
           Access climate intelligence data and analytics
         </motion.p>
