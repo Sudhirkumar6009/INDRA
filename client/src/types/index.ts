@@ -100,6 +100,16 @@ export type MapLayer =
   | 'clouds' 
   | 'wind';
 
+export type BaseMapId =
+  | 'clear_view'
+  | 'street'
+  | 'natural_earth'
+  | 'black_marble'
+  | 'true_marble'
+  | 'natural';
+
+export type VisMode = 'raw_grid' | 'idw' | 'contour' | 'kriging';
+
 export interface MapState {
   center: [number, number];
   zoom: number;

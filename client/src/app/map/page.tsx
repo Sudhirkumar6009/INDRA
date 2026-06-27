@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store';
-import type { MapLayer } from '@/types';
+import type { MapLayer, BaseMapId, VisMode } from '@/types';
 
 const IndiaMap = dynamic(() => import('@/components/maps/IndiaMap'), { ssr: false });
 
@@ -20,15 +20,33 @@ const LAYERS: { id: MapLayer; label: string }[] = [
   { id: 'minTemp', label: 'Min Temp' },
 ];
 
+const BASE_MAP_OPTIONS: { id: BaseMapId; label: string }[] = [
+  { id: 'clear_view', label: 'Clear View' },
+  { id: 'street', label: 'Street' },
+  { id: 'natural_earth', label: 'Natural Earth' },
+  { id: 'black_marble', label: 'Black Marble' },
+  { id: 'true_marble', label: 'True Marble' },
+  { id: 'natural', label: 'Natural' },
+];
+
+const VIS_MODES: { id: VisMode; label: string; desc: string }[] = [
+  { id: 'raw_grid', label: 'Raw IMD Grid', desc: 'Original measurements' },
+  { id: 'idw', label: 'IDW', desc: 'Inverse distance weighted' },
+  { id: 'contour', label: 'Contour', desc: 'Filled contour map' },
+  { id: 'kriging', label: 'Kriging', desc: 'Geostatistical interpolation' },
+];
+
 export default function MapPage() {
   const { mapState, selectedMonth, setMapLayer, setMonth } = useAppStore();
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [baseMap, setBaseMap] = useState<BaseMapId>('clear_view');
+  const [visMode, setVisMode] = useState<VisMode>('raw_grid');
 
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-black">
       <div className="absolute inset-0">
-        <IndiaMap year={2025} month={selectedMonth} activeLayer={mapState.activeLayer} onLocationSelect={setSelectedLocation} />
+        <IndiaMap year={2025} month={selectedMonth} activeLayer={mapState.activeLayer} baseMap={baseMap} visMode={visMode} onLocationSelect={setSelectedLocation} />
       </div>
 
       {/* Gradient overlay */}
@@ -120,6 +138,43 @@ export default function MapPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Visualisation mode selector */}
+      <div className="absolute bottom-72 left-4 z-[1000] flex flex-col gap-0.5 bg-white/15 backdrop-blur-xl rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.25)] p-2 border border-white/10 min-w-[120px]">
+        <span className="text-[10px] uppercase tracking-wider text-white/60 px-2 pb-1 font-semibold">Render</span>
+        {VIS_MODES.map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => setVisMode(opt.id)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 text-left ${
+              visMode === opt.id
+                ? 'bg-white text-gray-900 shadow-md'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
+            }`}
+            title={opt.desc}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Base map selector */}
+      <div className="absolute bottom-48 left-4 z-[1000] flex flex-col gap-0.5 bg-white/15 backdrop-blur-xl rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.25)] p-2 border border-white/10">
+        <span className="text-[10px] uppercase tracking-wider text-white/60 px-2 pb-1 font-semibold">Base</span>
+        {BASE_MAP_OPTIONS.map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => setBaseMap(opt.id)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 text-left ${
+              baseMap === opt.id
+                ? 'bg-white text-gray-900 shadow-md'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
