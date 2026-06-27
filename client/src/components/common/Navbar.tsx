@@ -8,7 +8,7 @@ import { useAppStore } from '@/store';
 import { Button } from '../ui/Button';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
-export const Navbar = () => {
+export const Navbar = ({ transparent }: { transparent?: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { auth, logout } = useAppStore();
 
@@ -21,10 +21,14 @@ export const Navbar = () => {
   ];
 
   return (
-    <motion.nav 
+    <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 z-50 shadow-sm"
+      className={`fixed top-0 w-full z-50 ${
+        transparent
+          ? 'bg-transparent backdrop-blur-none border-b-transparent'
+          : 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm'
+      }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -32,7 +36,7 @@ export const Navbar = () => {
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="flex items-center font-bold text-2xl tracking-wide">
               <span className="text-[#FF9933]">I</span>
-              <span className="text-gray-900 dark:text-white">N</span>
+              <span className={`${transparent ? 'text-white' : 'text-gray-900 dark:text-white'}`}>N</span>
               <span className="text-green-600">D</span>
               <span className="text-blue-600">R</span>
               <span className="text-blue-600">A</span>
@@ -45,7 +49,11 @@ export const Navbar = () => {
               <Link
                 key={link.name}
                 href={link.href}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                className={`px-4 py-2 font-medium rounded-lg transition-all ${
+                  transparent
+                    ? 'text-white/80 hover:text-white hover:bg-white/10'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
               >
                 {link.name}
               </Link>
@@ -56,14 +64,18 @@ export const Navbar = () => {
             {auth.isAuthenticated ? (
               <div className="flex items-center space-x-2 ml-4">
                 <Link href="/profile">
-                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <Button variant="ghost" size="icon" className={`${transparent ? 'text-white/80 hover:text-white hover:bg-white/10' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
                     <User className="h-5 w-5" />
                   </Button>
                 </Link>
                 <Button 
                   variant="outline" 
                   onClick={logout}
-                  className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-600 dark:text-green-400"
+                  className={`${
+                    transparent
+                      ? 'border-white/50 text-white hover:bg-white hover:text-gray-900'
+                      : 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-600 dark:text-green-400'
+                  }`}
                 >
                   Logout
                 </Button>
@@ -82,7 +94,7 @@ export const Navbar = () => {
             <ThemeToggle />
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className={`p-2 rounded-lg ${transparent ? 'text-white/80 hover:bg-white/10' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>

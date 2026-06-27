@@ -12,6 +12,14 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
+export interface MonthlyDataPoint {
+  lat: number;
+  lon: number;
+  rainfall: number | null;
+  maxTemp: number | null;
+  minTemp: number | null;
+}
+
 export interface ClimateData {
   id: string;
   region: string;

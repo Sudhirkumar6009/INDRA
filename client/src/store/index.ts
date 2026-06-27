@@ -5,11 +5,13 @@ interface AppStore {
   auth: AuthState;
   mapState: MapState;
   selectedTimeline: number;
+  selectedMonth: number;
   setAuth: (auth: Partial<AuthState>) => void;
   setUser: (user: User | null) => void;
   logout: () => void;
   setMapLayer: (layer: MapState['activeLayer']) => void;
   setMapCenter: (center: [number, number], zoom?: number) => void;
+  setMonth: (month: number) => void;
   setTimeline: (year: number) => void;
   toggleBoundaries: () => void;
 }
@@ -65,6 +67,8 @@ export const useAppStore = create<AppStore>((set) => ({
       },
     })),
   
+  selectedMonth: new Date().getMonth() + 1,
+  setMonth: (month: number) => set({ selectedMonth: month }),
   setTimeline: (year) =>
     set({ selectedTimeline: year }),
   

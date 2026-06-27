@@ -53,6 +53,8 @@ export const climateAPI = {
     apiClient.get('/climate/data', { params }),
   getHistorical: (region: string, startDate: string, endDate: string) =>
     apiClient.get('/climate/historical', { params: { region, startDate, endDate } }),
+  getMonthlyData: (year: number, month: number, variable?: string) =>
+    apiClient.get(`/climate/monthly/${year}/${month}`, { params: { variable } }),
   getTimeline: (year: number) =>
     apiClient.get(`/climate/timeline/${year}`),
   searchRegion: (query: string) =>

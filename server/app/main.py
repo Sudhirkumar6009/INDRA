@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api import auth, climate, dashboard
-from app.database.db import Base, engine
+from app.database.db import Base, engine, init_postgis
 
+init_postgis()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -24,6 +25,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(climate.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 
+
 @app.get("/")
 def read_root():
     return {
@@ -31,6 +33,7 @@ def read_root():
         "version": "1.0.0",
         "status": "operational"
     }
+
 
 @app.get("/health")
 def health_check():
