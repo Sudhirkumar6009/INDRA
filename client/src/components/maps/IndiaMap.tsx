@@ -1,53 +1,38 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
-import { useAppStore } from '@/store';
+import { useEffect, useState, useRef } from 'react';
+import L from 'leaflet';
+import { MapContainer, TileLayer, useMap, Pane } from 'react-leaflet';
 import { climateAPI } from '@/services/api';
 import type { MonthlyDataPoint, MapLayer } from '@/types';
 import 'leaflet/dist/leaflet.css';
 
+const CENTER: [number, number] = [20.5937, 78.9629];
+const ZOOM = 5;
+
+const INDIA_BOUNDS: [[number, number], [number, number]] = [
+  [4.0, 65.0],
+  [39.0, 100.0],
+];
+
 function MapController() {
   const map = useMap();
-  const { mapState } = useAppStore();
-
-  useEffect(() => {
-    map.setView(mapState.center, mapState.zoom);
-  }, [map, mapState.center, mapState.zoom]);
-
+  useEffect(() => { map.setView(CENTER, ZOOM); }, []);
   return null;
 }
 
-function estimateCellHalo(data: MonthlyDataPoint[]): number {
-  const lats = Array.from(new Set(data.map(d => d.lat))).sort((a, b) => a - b);
-  if (lats.length < 2) return 0.125;
-  let minDiff = Infinity;
-  for (let i = 1; i < Math.min(lats.length, 50); i++) {
-    const diff = lats[i] - lats[i - 1];
-    if (diff > 0 && diff < minDiff) minDiff = diff;
-  }
-  return minDiff === Infinity ? 0.125 : minDiff / 2;
-}
-
-function makeCell(lat: number, lon: number, half: number) {
-  return [[
-    [lon - half, lat - half],
-    [lon + half, lat - half],
-    [lon + half, lat + half],
-    [lon - half, lat + half],
-    [lon - half, lat - half],
-  ]];
-}
-
 function rainfallColor(value: number): string {
-  if (value <= 0) return '#f0f9ff';
-  if (value < 10)   return '#bae6fd';
-  if (value < 50)   return '#7dd3fc';
-  if (value < 100)  return '#38bdf8';
-  if (value < 200)  return '#0ea5e9';
-  if (value < 400)  return '#0284c7';
-  if (value < 700)  return '#0369a1';
-  return '#0c4a6e';
+  if (value <= 0)   return '#f0f9ff';
+  if (value < 5)    return '#e0f2fe';
+  if (value < 15)   return '#bae6fd';
+  if (value < 30)   return '#7dd3fc';
+  if (value < 60)   return '#38bdf8';
+  if (value < 100)  return '#0ea5e9';
+  if (value < 150)  return '#0284c7';
+  if (value < 250)  return '#0369a1';
+  if (value < 400)  return '#075985';
+  if (value < 600)  return '#0c4a6e';
+  return '#082f49';
 }
 
 function tempColor(value: number, layer: MapLayer): string {
@@ -69,31 +54,30 @@ function tempColor(value: number, layer: MapLayer): string {
   return '#dc2626';
 }
 
-function getLegend(layer: MapLayer): { label: string; color: string }[] {
-  if (layer === 'rainfall') {
-    return [
-      { label: '0 mm', color: '#f0f9ff' },
-      { label: '1-10', color: '#bae6fd' },
-      { label: '10-50', color: '#7dd3fc' },
-      { label: '50-100', color: '#38bdf8' },
-      { label: '100-200', color: '#0ea5e9' },
-      { label: '200-400', color: '#0284c7' },
-      { label: '400-700', color: '#0369a1' },
-      { label: '>700', color: '#0c4a6e' },
-    ];
-  }
-  if (layer === 'minTemp') {
-    return [
-      { label: '<5°C', color: '#0c4a6e' },
-      { label: '5-10', color: '#0369a1' },
-      { label: '10-15', color: '#0284c7' },
-      { label: '15-20', color: '#0ea5e9' },
-      { label: '20-25', color: '#38bdf8' },
-      { label: '25-30', color: '#7dd3fc' },
-      { label: '>30°C', color: '#bae6fd' },
-    ];
-  }
-  return [
+const LEGENDS: Record<string, { label: string; color: string }[]> = {
+  rainfall: [
+    { label: '0', color: '#f0f9ff' },
+    { label: '5', color: '#e0f2fe' },
+    { label: '15', color: '#bae6fd' },
+    { label: '30', color: '#7dd3fc' },
+    { label: '60', color: '#38bdf8' },
+    { label: '100', color: '#0ea5e9' },
+    { label: '150', color: '#0284c7' },
+    { label: '250', color: '#0369a1' },
+    { label: '400', color: '#075985' },
+    { label: '600', color: '#0c4a6e' },
+    { label: '>600', color: '#082f49' },
+  ],
+  minTemp: [
+    { label: '<5°C', color: '#0c4a6e' },
+    { label: '5-10', color: '#0369a1' },
+    { label: '10-15', color: '#0284c7' },
+    { label: '15-20', color: '#0ea5e9' },
+    { label: '20-25', color: '#38bdf8' },
+    { label: '25-30', color: '#7dd3fc' },
+    { label: '>30°C', color: '#bae6fd' },
+  ],
+  maxTemp: [
     { label: '<20°C', color: '#bbf7d0' },
     { label: '20-25', color: '#86efac' },
     { label: '25-30', color: '#4ade80' },
@@ -101,162 +85,219 @@ function getLegend(layer: MapLayer): { label: string; color: string }[] {
     { label: '35-38', color: '#fb923c' },
     { label: '38-40', color: '#f97316' },
     { label: '>40°C', color: '#dc2626' },
-  ];
+  ],
+};
+
+function RasterLayer({ data, layer, onLocationSelect }: { data: MonthlyDataPoint[]; layer: MapLayer; onLocationSelect: (loc: any) => void }) {
+  const map = useMap();
+  const overlayRef = useRef<L.ImageOverlay | null>(null);
+  const boundaryRef = useRef<number[][][][] | null>(null);
+
+  useEffect(() => {
+    fetch('/data/india.json')
+      .then(r => r.json())
+      .then(gj => {
+        const feature = gj.features?.[0];
+        if (feature?.geometry?.type === 'MultiPolygon') {
+          boundaryRef.current = feature.geometry.coordinates;
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (data.length < 2) return;
+    const lats = Array.from(new Set(data.map(d => d.lat))).sort((a, b) => a - b);
+    const lons = Array.from(new Set(data.map(d => d.lon))).sort((a, b) => a - b);
+    const rows = lats.length;
+    const cols = lons.length;
+    const minLat = lats[0], maxLat = lats[rows - 1];
+    const minLon = lons[0], maxLon = lons[cols - 1];
+    const lonMap = new Map(lons.map((v, i) => [v, i]));
+    const latMap = new Map(lats.map((v, i) => [v, rows - 1 - i]));
+    const isRain = layer === 'rainfall';
+
+    const up = 8;
+    const w = cols * up, h = rows * up;
+    const cvs = document.createElement('canvas');
+    cvs.width = w;
+    cvs.height = h;
+    const ctx = cvs.getContext('2d')!;
+
+    const mer = (lat: number) => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+    const merY = lats.map(mer);
+    const minMY = merY[0], maxMY = merY[rows - 1];
+    const myRng = maxMY - minMY;
+    const latToY = (lat: number) => h - ((mer(lat) - minMY) / myRng * h);
+
+    const rings = boundaryRef.current;
+    if (rings) {
+      ctx.save();
+      ctx.beginPath();
+      for (const polygon of rings) {
+        for (const ring of polygon) {
+          if (ring.length < 3) continue;
+          const sx = ((ring[0][0] as number) - minLon) / (maxLon - minLon) * w;
+          const sy = latToY(ring[0][1] as number);
+          ctx.moveTo(sx, sy);
+          for (let i = 1; i < ring.length; i++) {
+            const px = ((ring[i][0] as number) - minLon) / (maxLon - minLon) * w;
+            const py = latToY(ring[i][1] as number);
+            ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+        }
+      }
+      ctx.clip('evenodd');
+    }
+
+    for (const d of data) {
+      const col = lonMap.get(d.lon);
+      const row = latMap.get(d.lat);
+      if (col === undefined || row === undefined) continue;
+      const value = isRain ? d.rainfall : layer === 'maxTemp' ? d.maxTemp : d.minTemp;
+      if (value === null || value < 0) continue;
+      ctx.fillStyle = isRain ? rainfallColor(value) : tempColor(value, layer);
+      const y0 = latToY(d.lat);
+      const nextLatIdx = rows - 2 - row;
+      const nextLat = nextLatIdx >= 0 ? lats[nextLatIdx] : lats[0] - (lats[1] - lats[0]);
+      const y1 = latToY(nextLat);
+      ctx.fillRect(col * up + 1, y0 + 1, up - 2, (y1 - y0) - 2);
+    }
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < cols; i++) {
+      const x = i * up;
+      ctx.beginPath();
+      ctx.moveTo(x + 0.5, 0);
+      ctx.lineTo(x + 0.5, h);
+      ctx.stroke();
+    }
+    for (let j = 0; j < rows; j++) {
+      const y = latToY(lats[j]);
+      ctx.beginPath();
+      ctx.moveTo(0, y + 0.5);
+      ctx.lineTo(w, y + 0.5);
+      ctx.stroke();
+    }
+
+    if (rings) ctx.restore();
+
+    const imageUrl = cvs.toDataURL('image/png');
+    const bounds = L.latLngBounds([[minLat, minLon], [maxLat, maxLon]]);
+
+    if (overlayRef.current) {
+      overlayRef.current.setBounds(bounds);
+      overlayRef.current.setUrl(imageUrl);
+    } else {
+      if (!map.getPane('data')) map.createPane('data');
+      const pane = map.getPane('data')!;
+      pane.style.zIndex = '400';
+      pane.style.pointerEvents = 'none';
+      overlayRef.current = L.imageOverlay(imageUrl, bounds, { pane: 'data' });
+      overlayRef.current.addTo(map);
+    }
+
+    return () => {
+      if (overlayRef.current) {
+        overlayRef.current.remove();
+        overlayRef.current = null;
+      }
+    };
+  }, [map, data, layer]);
+
+  useEffect(() => {
+    function findNearest(latlng: { lat: number; lng: number }) {
+      let closest: MonthlyDataPoint | null = null;
+      let minDist = Infinity;
+      for (const d of data) {
+        const dist = (d.lat - latlng.lat) ** 2 + (d.lon - latlng.lng) ** 2;
+        if (dist < minDist) { minDist = dist; closest = d; }
+      }
+      return closest;
+    }
+    function handleHover(e: any) {
+      const closest = findNearest(e.latlng);
+      if (closest) {
+        map.getContainer().style.cursor = 'crosshair';
+      }
+    }
+    function handleClick(e: any) {
+      const closest = findNearest(e.latlng);
+      if (closest) {
+        onLocationSelect({
+          name: `${closest.lat.toFixed(4)}°N, ${closest.lon.toFixed(4)}°E`,
+          rainfall: closest.rainfall ?? 0,
+          maxTemp: closest.maxTemp ?? 0,
+          minTemp: closest.minTemp ?? 0,
+        });
+      }
+    }
+    map.on('mousemove', handleHover);
+    map.on('click', handleClick);
+    return () => {
+      map.off('mousemove', handleHover);
+      map.off('click', handleClick);
+      map.getContainer().style.cursor = '';
+    };
+  }, [map, data, onLocationSelect]);
+
+  return null;
 }
 
-export default function IndiaMap({ year, month, onLocationSelect }: { year: number; month: number; onLocationSelect: (location: any) => void }) {
-  const { mapState, setMapCenter } = useAppStore();
+export default function IndiaMap({ year, month, activeLayer, onLocationSelect }: { year: number; month: number; activeLayer: MapLayer; onLocationSelect: (loc: any) => void }) {
   const [data, setData] = useState<MonthlyDataPoint[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchMonthly() {
-      setLoading(true);
       try {
-        const layerKey = mapState.activeLayer;
-        const variable = layerKey === 'rainfall' ? 'rainfall' : layerKey === 'maxTemp' ? 'max_temp' : layerKey === 'minTemp' ? 'min_temp' : undefined;
+        const variable = activeLayer === 'rainfall' ? 'rainfall' : activeLayer === 'maxTemp' ? 'max_temp' : activeLayer === 'minTemp' ? 'min_temp' : undefined;
         const response = await climateAPI.getMonthlyData(year, month, variable);
         setData(response.data.filter((d: MonthlyDataPoint) => d.lat && d.lon));
       } catch (err) {
         console.warn('Could not fetch monthly climate data:', err);
         setData([]);
-      } finally {
-        setLoading(false);
       }
     }
     fetchMonthly();
-  }, [year, month, mapState.activeLayer]);
+  }, [year, month, activeLayer]);
 
-  const halfCell = useMemo(() => estimateCellHalo(data), [data]);
-
-  const isRainfall = mapState.activeLayer === 'rainfall';
-
-  const features = useMemo(() => {
-    if (data.length === 0) return [];
-    return data.map(d => ({
-      type: 'Feature' as const,
-      properties: {
-        name: `${d.lat.toFixed(2)}, ${d.lon.toFixed(2)}`,
-        rainfall: d.rainfall ?? 0,
-        maxTemp: d.maxTemp ?? 0,
-        minTemp: d.minTemp ?? 0,
-        temp: d.maxTemp ?? 0,
-        lat: d.lat,
-        lon: d.lon,
-      },
-      geometry: {
-        type: isRainfall ? ('Polygon' as const) : ('Point' as const),
-        coordinates: isRainfall ? makeCell(d.lat, d.lon, halfCell) as any : [d.lon, d.lat],
-      },
-    }));
-  }, [data, halfCell, isRainfall]);
-
-  const geoJsonStyle = useMemo(() => {
-    if (!isRainfall) return undefined;
-    return (feature: any) => {
-      const value = feature.properties.rainfall as number;
-      return {
-        fillColor: rainfallColor(value),
-        weight: 0.2,
-        opacity: 0.6,
-        color: '#1a1a2e',
-        fillOpacity: 0.85,
-      };
-    };
-  }, [isRainfall]);
-
-  const layerStyle = useMemo(() => {
-    if (isRainfall) return undefined;
-    return (feature: any) => {
-      const p = feature.properties;
-      const layerKey = mapState.activeLayer;
-      const value = layerKey === 'maxTemp' ? p.maxTemp : layerKey === 'minTemp' ? p.minTemp : p.temp;
-      return {
-        fillColor: tempColor(value, layerKey),
-        weight: 1,
-        opacity: 0.8,
-        color: '#1a1a2e',
-        fillOpacity: 0.6,
-      };
-    };
-  }, [isRainfall, mapState.activeLayer]);
-
-  const onEachFeature = (feature: any, layer: any) => {
-    const p = feature.properties;
-    const isPoint = feature.geometry.type === 'Point';
-    const coords = isPoint ? feature.geometry.coordinates : [p.lon, p.lat];
-
-    layer.bindPopup(`
-      <div style="font-family: sans-serif; min-width: 160px;">
-        <span style="color: #15803d;">${p.name}</span>
-        <hr style="margin: 6px 0; border-color: #e5e7eb;" />
-        <div><strong>Rainfall:</strong> ${p.rainfall.toFixed(1)} mm</div>
-        <div><strong>Max Temp:</strong> ${p.maxTemp.toFixed(1)} °C</div>
-        <div><strong>Min Temp:</strong> ${p.minTemp.toFixed(1)} °C</div>
-      </div>
-    `);
-
-    layer.on('click', () => {
-      onLocationSelect({
-        name: p.name,
-        rainfall: p.rainfall,
-        temp: p.temp,
-        maxTemp: p.maxTemp,
-        minTemp: p.minTemp,
-      });
-      setMapCenter([coords[1], coords[0]], 8);
-    });
-  };
-
-  const legend = getLegend(mapState.activeLayer);
+  const legend = LEGENDS[activeLayer] || LEGENDS.rainfall;
+  const legendTitle = activeLayer === 'rainfall' ? 'Rainfall (mm)' : activeLayer === 'minTemp' ? 'Min Temp (°C)' : 'Max Temp (°C)';
 
   return (
     <div className="relative h-full w-full">
-      {loading && (
-        <div className="absolute top-4 right-4 z-[1000] bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-lg text-sm text-gray-600 dark:text-gray-300">
-          Loading data...
-        </div>
-      )}
       <MapContainer
-        center={mapState.center}
-        zoom={mapState.zoom}
+        center={CENTER}
+        zoom={ZOOM}
+        maxBounds={INDIA_BOUNDS}
+        maxBoundsViscosity={1.0}
+        minZoom={4}
         style={{ height: '100%', width: '100%' }}
         className="z-0"
       >
         <MapController />
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
         />
-        {features.length > 0 && (
-          <GeoJSON
-            key={`${month}-${mapState.activeLayer}-${features.length}`}
-            data={{ type: 'FeatureCollection', features } as any}
-            style={geoJsonStyle ?? layerStyle}
-            pointToLayer={!isRainfall ? (feature: any, latlng: any) => {
-              const p = feature.properties;
-              const layerKey = mapState.activeLayer;
-              const value = layerKey === 'maxTemp' ? p.maxTemp : layerKey === 'minTemp' ? p.minTemp : p.temp;
-              return (window as any).L.circleMarker(latlng, {
-                radius: 4,
-                fillColor: tempColor(value, layerKey),
-                color: '#1a1a2e',
-                weight: 1,
-                opacity: 0.8,
-                fillOpacity: 0.6,
-              });
-            } : undefined}
-            onEachFeature={onEachFeature}
-          />
+        {data.length > 0 && (
+          <RasterLayer data={data} layer={activeLayer} onLocationSelect={onLocationSelect} />
         )}
+        <Pane name="labels" style={{ zIndex: 500, pointerEvents: 'none' }}>
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
+          />
+        </Pane>
       </MapContainer>
-      {/* Legend */}
-      <div className="absolute bottom-6 left-4 z-[1000] bg-white/95 dark:bg-gray-800/95 rounded-lg shadow-lg p-3 text-xs">
-        <p className="font-semibold mb-1.5 dark:text-white capitalize">{mapState.activeLayer === 'rainfall' ? 'Rainfall (mm)' : mapState.activeLayer === 'minTemp' ? 'Min Temp (°C)' : 'Max Temp (°C)'}</p>
+      <div className="absolute bottom-6 left-4 z-[1000] bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-3.5 text-xs border border-white/20 min-w-[90px]">
+        <p className="font-semibold mb-2 dark:text-white capitalize">{legendTitle}</p>
         {legend.map(item => (
-          <div key={item.label} className="flex items-center gap-2 py-0.5">
-            <div className="w-4 h-3 rounded" style={{ backgroundColor: item.color }} />
-            <span className="dark:text-gray-300">{item.label}</span>
+          <div key={item.label} className="flex items-center gap-2.5 py-1">
+            <div className="w-5 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
+            <span className="dark:text-gray-300 text-gray-600">{item.label}</span>
           </div>
         ))}
       </div>

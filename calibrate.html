@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>INDRA — Data Calibration</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        font-family: system-ui, sans-serif;
+        background: #0f0f0f;
+        color: #fff;
+      }
+      #map {
+        height: 100%;
+        flex: 1;
+      }
+      #panel {
+        width: 340px;
+        background: #1a1a2e;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        border-left: 1px solid #2a2a4a;
+        overflow-y: auto;
+      }
+      h2 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #a5b4fc;
+      }
+      .section {
+        background: #16162a;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #2a2a4a;
+      }
+      .section h3 {
+        font-size: 13px;
+        font-weight: 500;
+        color: #94a3b8;
+        margin-bottom: 12px;
+      }
+      .slider-group {
+        margin-bottom: 10px;
+      }
+      .slider-group label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #cbd5e1;
+        margin-bottom: 4px;
+      }
+      .slider-group input[type="range"] {
+        width: 100%;
+        accent-color: #6366f1;
+        height: 4px;
+        cursor: pointer;
+      }
+      .slider-group .value {
+        font-weight: 600;
+        color: #a5b4fc;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .info-item {
+        background: #1e1e38;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #2a2a4a;
+      }
+      .info-item .lbl {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+      }
+      .info-item .val {
+        font-size: 15px;
+        font-weight: 700;
+        color: #e2e8f0;
+        margin-top: 4px;
+      }
+      .info-item .val.lat {
+        color: #60a5fa;
+      }
+      .info-item .val.lon {
+        color: #34d399;
+      }
+      .info-item .val.rain {
+        color: #38bdf8;
+      }
+      select {
+        width: 100%;
+        background: #1e1e38;
+        color: #e2e8f0;
+        border: 1px solid #2a2a4a;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+        outline: none;
+      }
+      select:focus {
+        border-color: #6366f1;
+      }
+      .btn {
+        background: #6366f1;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn:hover {
+        background: #4f46e5;
+      }
+      .btn.secondary {
+        background: #2a2a4a;
+        color: #cbd5e1;
+      }
+      .btn.secondary:hover {
+        background: #3a3a5a;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        margin-top: 8px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        color: #94a3b8;
+      }
+      .legend-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+      }
+      #hover-bar {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(15, 15, 30, 0.92);
+        backdrop-filter: blur(12px);
+        border: 1px solid #2a2a4a;
+        border-radius: 12px;
+        padding: 10px 18px;
+        font-size: 12px;
+        z-index: 1000;
+        display: none;
+        gap: 16px;
+        align-items: center;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      #hover-bar.visible {
+        display: flex;
+      }
+      .leaflet-container {
+        background: #0a0a1a;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="hover-bar">
+      <span
+        ><span style="color: #60a5fa">●</span> <span id="h-lat">--</span></span
+      >
+      <span
+        ><span style="color: #34d399">●</span> <span id="h-lon">--</span></span
+      >
+      <span
+        ><span style="color: #38bdf8">■</span> <span id="h-val">--</span></span
+      >
+    </div>
+
+    <div id="panel">
+      <h2>INDRA Calibration</h2>
+      <div class="section">
+        <h3>
+          Data Offset
+          <span style="color: #f87171">(negative = shift down)</span>
+        </h3>
+        <div class="slider-group">
+          <label>Vertical <span class="value" id="vy-val">0.00°</span></label>
+          <input type="range" id="vy" min="-5" max="5" step="0.01" value="0" />
+        </div>
+        <div class="slider-group">
+          <label>Horizontal <span class="value" id="vx-val">0.00°</span></label>
+          <input type="range" id="vx" min="-5" max="5" step="0.01" value="0" />
+        </div>
+      </div>
+      <div class="section">
+        <h3>Layer</h3>
+        <select id="layer">
+          <option value="rainfall">Rainfall</option>
+          <option value="maxTemp">Max Temp</option>
+          <option value="minTemp">Min Temp</option>
+        </select>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="section">
+        <h3>Click Info</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="lbl">Lat</div>
+            <div class="val lat" id="i-lat">--</div>
+          </div>
+          <div class="info-item">
+            <div class="lbl">Lon</div>
+            <div class="val lon" id="i-lon">--</div>
+          </div>
+          <div class="info-item">
+            <div class="lbl">Rainfall</div>
+            <div class="val rain" id="i-rain">--</div>
+          </div>
+          <div class="info-item">
+            <div class="lbl">Max Temp</div>
+            <div class="val" id="i-max" style="color: #fb923c">--</div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button class="btn" onclick="resetOffsets()" style="flex: 1">
+          Reset
+        </button>
+        <button class="btn secondary" onclick="copyReport()" style="flex: 1">
+          Copy
+        </button>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      // ─── data ───
+      const LATS = [];
+      for (let la = 6.5; la <= 36.5; la += 0.25)
+        LATS.push(Math.round(la * 100) / 100);
+      const LONS = [];
+      for (let lo = 68; lo <= 98; lo += 0.25)
+        LONS.push(Math.round(lo * 100) / 100);
+      const R = LATS.length,
+        C = LONS.length,
+        DATA = [];
+      function gen(lat, lon) {
+        const n = (lat - 20) ** 2 / 200 + (lon - 78) ** 2 / 300;
+        let v = 200 * Math.exp(-n / 2);
+        if (lat < 20) v += 300 * Math.exp(-((lon - 75) ** 2) / 50) * 0.5;
+        if (lon > 82 && lon < 90)
+          v += 150 * Math.exp(-((lat - 25) ** 2) / 80) * 0.5;
+        if (lat > 8 && lat < 16 && lon > 73 && lon < 77) v += 250;
+        const tmax =
+          32 -
+          Math.abs(lat - 15) / 2 +
+          (lat > 28 && lon > 75 && lon < 80 ? -8 : 0) +
+          Math.random() * 3 -
+          1.5;
+        const tmin =
+          22 -
+          Math.abs(lat - 12) / 2.5 +
+          (lat > 28 && lon > 75 && lon < 80 ? -8 : 0) +
+          Math.random() * 3 -
+          1.5;
+        return {
+          v: Math.round((v + 10 + Math.random() * 15) * 10) / 10,
+          tmax: Math.round(tmax * 10) / 10,
+          tmin: Math.round(tmin * 10) / 10,
+        };
+      }
+      for (let r = 0; r < R; r++)
+        for (let c = 0; c < C; c++) {
+          const g = gen(LATS[r], LONS[c]);
+          DATA.push({
+            lat: LATS[r],
+            lon: LONS[c],
+            rainfall: g.v,
+            maxTemp: g.tmax,
+            minTemp: g.tmin,
+          });
+        }
+
+      function rainC(v) {
+        if (v <= 0) return "#f0f9ff";
+        if (v < 5) return "#e0f2fe";
+        if (v < 15) return "#bae6fd";
+        if (v < 30) return "#7dd3fc";
+        if (v < 60) return "#38bdf8";
+        if (v < 100) return "#0ea5e9";
+        if (v < 150) return "#0284c7";
+        if (v < 250) return "#0369a1";
+        if (v < 400) return "#075985";
+        if (v < 600) return "#0c4a6e";
+        return "#082f49";
+      }
+      function tC(v, m) {
+        if (m) {
+          if (v <= 5) return "#0c4a6e";
+          if (v <= 10) return "#0369a1";
+          if (v <= 15) return "#0284c7";
+          if (v <= 20) return "#0ea5e9";
+          if (v <= 25) return "#38bdf8";
+          if (v <= 30) return "#7dd3fc";
+          return "#bae6fd";
+        }
+        if (v <= 20) return "#bbf7d0";
+        if (v <= 25) return "#86efac";
+        if (v <= 30) return "#4ade80";
+        if (v <= 35) return "#fcd34d";
+        if (v <= 38) return "#fb923c";
+        if (v <= 40) return "#f97316";
+        return "#dc2626";
+      }
+      const LEG = {
+        rainfall: [
+          ["0", "#f0f9ff"],
+          ["5", "#e0f2fe"],
+          ["15", "#bae6fd"],
+          ["30", "#7dd3fc"],
+          ["60", "#38bdf8"],
+          ["100", "#0ea5e9"],
+          ["150", "#0284c7"],
+          ["250", "#0369a1"],
+          ["400", "#075985"],
+          ["600", "#0c4a6e"],
+          [">600", "#082f49"],
+        ],
+        maxTemp: [
+          ["<20", "#bbf7d0"],
+          ["20-25", "#86efac"],
+          ["25-30", "#4ade80"],
+          ["30-35", "#fcd34d"],
+          ["35-38", "#fb923c"],
+          ["38-40", "#f97316"],
+          [">40", "#dc2626"],
+        ],
+        minTemp: [
+          ["<5", "#0c4a6e"],
+          ["5-10", "#0369a1"],
+          ["10-15", "#0284c7"],
+          ["15-20", "#0ea5e9"],
+          ["20-25", "#38bdf8"],
+          ["25-30", "#7dd3fc"],
+          [">30", "#bae6fd"],
+        ],
+      };
+
+      // ─── map ───
+      const map = L.map("map", {
+        center: [20.5937, 78.9629],
+        zoom: 5,
+        minZoom: 4,
+        maxBounds: [
+          [4, 65],
+          [39, 100],
+        ],
+        maxBoundsViscosity: 1,
+      });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OSM",
+      }).addTo(map);
+      const lp = map.createPane("labels");
+      lp.style.zIndex = "500";
+      lp.style.pointerEvents = "none";
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png",
+        { attribution: "&copy; CARTO", pane: "labels" },
+      ).addTo(map);
+      const dp = map.createPane("data");
+      dp.style.zIndex = "400";
+      dp.style.pointerEvents = "none";
+
+      // ─── India boundary ───
+      let boundaryLayer = null,
+        BOUNDARY = null,
+        BOUNDARY_T = null;
+      function loadBoundary(url) {
+        fetch(url)
+          .then((r) => (r.ok ? r.json() : Promise.reject()))
+          .then((gj) => {
+            let feat = null;
+            for (const f of gj.features) {
+              const n = f.properties?.ADMIN || f.properties?.SOVEREIGNT || "";
+              if (n === "India") {
+                feat = f;
+                break;
+              }
+            }
+            if (!feat) return;
+            BOUNDARY = feat.geometry.coordinates;
+            BOUNDARY_T = feat.geometry.type;
+            boundaryLayer = L.geoJSON(feat, {
+              style: { color: "#a5b4fc", weight: 2, fill: false, opacity: 0.8 },
+            }).addTo(map);
+            render();
+          })
+          .catch(() => setTimeout(() => loadBoundary(url), 1000));
+      }
+      loadBoundary(
+        "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson",
+      );
+
+      // ─── image builder ───
+      let overlay = null;
+      function mercY(lat) {
+        return Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+      }
+      function buildImage(vy, vx) {
+        const l = document.getElementById("layer").value;
+        const isRain = l === "rainfall",
+          isMin = l === "minTemp";
+        const cf = isRain ? rainC : (v) => tC(v, isMin);
+        const minLat = LATS[0],
+          maxLat = LATS[R - 1],
+          minLon = LONS[0],
+          maxLon = LONS[C - 1];
+        const merA = LATS.map(mercY),
+          loM = merA[0],
+          hiM = merA[R - 1];
+        const latToY = (la) => ((mercY(la) - loM) / (hiM - loM)) * R * 8;
+        const up = 8,
+          w = C * up,
+          h = R * up;
+        const cvs = document.createElement("canvas");
+        cvs.width = w;
+        cvs.height = h;
+        const ctx = cvs.getContext("2d");
+        if (BOUNDARY) {
+          const polys = BOUNDARY_T === "Polygon" ? [BOUNDARY] : BOUNDARY;
+          ctx.save();
+          ctx.beginPath();
+          for (const p of polys)
+            for (const ring of p) {
+              if (ring.length < 3) continue;
+              ctx.moveTo(
+                ((ring[0][0] - minLon) / (maxLon - minLon)) * w,
+                latToY(ring[0][1]),
+              );
+              for (let i = 1; i < ring.length; i++)
+                ctx.lineTo(
+                  ((ring[i][0] - minLon) / (maxLon - minLon)) * w,
+                  latToY(ring[i][1]),
+                );
+              ctx.closePath();
+            }
+          ctx.clip("evenodd");
+        }
+        const loM2 = new Map(LONS.map((v, i) => [v, i])),
+          laM2 = new Map(LATS.map((v, i) => [v, R - 1 - i]));
+        for (const d of DATA) {
+          const col = loM2.get(d.lon),
+            row = laM2.get(d.lat);
+          if (col === undefined || row === undefined) continue;
+          const val = isRain ? d.rainfall : isMin ? d.minTemp : d.maxTemp;
+          if (val === null || val < 0) continue;
+          ctx.fillStyle = cf(val);
+          const y0 = latToY(d.lat),
+            y1 = latToY(
+              LATS[row + 1] ?? LATS[row] + (LATS[row] - LATS[row - 1]),
+            );
+          ctx.fillRect(col * up + 1, y0 + 1, up - 2, y1 - y0 - 2);
+        }
+        ctx.strokeStyle = "rgba(0,0,0,0.12)";
+        ctx.lineWidth = 1;
+        for (let i = 1; i < C; i++) {
+          const x = i * up;
+          ctx.beginPath();
+          ctx.moveTo(x + 0.5, 0);
+          ctx.lineTo(x + 0.5, h);
+          ctx.stroke();
+        }
+        for (let j = 0; j < R; j++) {
+          const y = latToY(LATS[j]);
+          ctx.beginPath();
+          ctx.moveTo(0, y + 0.5);
+          ctx.lineTo(w, y + 0.5);
+          ctx.stroke();
+        }
+        if (BOUNDARY) ctx.restore();
+        return {
+          url: cvs.toDataURL("image/png"),
+          bounds: L.latLngBounds([
+            [minLat + vy, minLon + vx],
+            [maxLat + vy, maxLon + vx],
+          ]),
+        };
+      }
+      function render() {
+        const vy = +document.getElementById("vy").value,
+          vx = +document.getElementById("vx").value;
+        if (overlay) map.removeLayer(overlay);
+        const { url, bounds } = buildImage(vy, vx);
+        overlay = L.imageOverlay(url, bounds, { pane: "data" });
+        overlay.addTo(map);
+        document.getElementById("vy-val").textContent = vy.toFixed(2) + "°";
+        document.getElementById("vx-val").textContent = vx.toFixed(2) + "°";
+      }
+      document.getElementById("layer").addEventListener("change", () => {
+        updateLeg();
+        render();
+      });
+      document.getElementById("vy").addEventListener("input", render);
+      document.getElementById("vx").addEventListener("input", render);
+      function resetOffsets() {
+        document.getElementById("vy").value = "0";
+        document.getElementById("vx").value = "0";
+        render();
+      }
+      function copyReport() {
+        const vy = document.getElementById("vy").value,
+          vx = document.getElementById("vx").value;
+        navigator.clipboard
+          ?.writeText(`Offset: ${vy}° lat, ${vx}° lon`)
+          .catch(() => {});
+        alert(`Offset: ${vy}° lat, ${vx}° lon`);
+      }
+
+      // ─── hover/click ───
+      function findNearest(latlng) {
+        let b = null,
+          m = Infinity;
+        for (const d of DATA) {
+          const d2 = (d.lat - latlng.lat) ** 2 + (d.lon - latlng.lng) ** 2;
+          if (d2 < m) {
+            m = d2;
+            b = d;
+          }
+        }
+        return b;
+      }
+      map.on("click", (e) => {
+        const d = findNearest(e.latlng);
+        if (!d) return;
+        document.getElementById("i-lat").textContent = d.lat.toFixed(4) + "°N";
+        document.getElementById("i-lon").textContent = d.lon.toFixed(4) + "°E";
+        document.getElementById("i-rain").textContent =
+          d.rainfall.toFixed(1) + " mm";
+        document.getElementById("i-max").textContent =
+          d.maxTemp.toFixed(1) + " °C";
+      });
+      map.on("mousemove", (e) => {
+        const d = findNearest(e.latlng);
+        const el = document.getElementById("hover-bar");
+        if (d) {
+          document.getElementById("h-lat").textContent =
+            d.lat.toFixed(2) + "°N";
+          document.getElementById("h-lon").textContent =
+            d.lon.toFixed(2) + "°E";
+          const ir = document.getElementById("layer").value === "rainfall";
+          const v = ir
+            ? d.rainfall
+            : document.getElementById("layer").value === "minTemp"
+              ? d.minTemp
+              : d.maxTemp;
+          document.getElementById("h-val").textContent =
+            v.toFixed(1) + (ir ? " mm" : " °C");
+          el.classList.add("visible");
+        } else el.classList.remove("visible");
+      });
+
+      function updateLeg() {
+        const l = document.getElementById("layer").value;
+        document.getElementById("legend").innerHTML = LEG[l]
+          .map(
+            ([lb, cl]) =>
+              '<div class="legend-item"><div class="legend-swatch" style="background:' +
+              cl +
+              '"></div>' +
+              lb +
+              "</div>",
+          )
+          .join("");
+      }
+      updateLeg();
+      render();
+    </script>
+  </body>
+</html>
