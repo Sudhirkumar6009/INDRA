@@ -59,6 +59,12 @@ export const climateAPI = {
     apiClient.get(`/climate/timeline/${year}`),
   searchRegion: (query: string) =>
     apiClient.get('/climate/search', { params: { q: query } }),
+  getRasterUrl: (date: string, variable: string) =>
+    `${API_URL}/api/v1/weather/raster?date=${date}&variable=${variable}`,
+  getAvailableDates: (year: number, month: number, variable: string) =>
+    apiClient.get('/weather/dates', { params: { year, month, variable } }),
+  getGridPoints: (date: string) =>
+    apiClient.get('/climate/grid-points', { params: { date } }),
 };
 
 export const predictionAPI = {

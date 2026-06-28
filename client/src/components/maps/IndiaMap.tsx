@@ -196,7 +196,7 @@ export default function IndiaMap({
 
   const climateUrlRef = useRef<string | null>(null);
   const climateCoordsRef = useRef<[[number, number], [number, number], [number, number], [number, number]] | null>(null);
-  const boundaryRef = useRef<number[][][][] | null>(null);
+  const [boundary, setBoundary] = useState<number[][][][] | null>(null);
 
   useEffect(() => {
     fetch("/data/india.json")
@@ -204,14 +204,14 @@ export default function IndiaMap({
       .then((gj) => {
         const feature = gj.features?.[0];
         if (feature?.geometry?.type === "MultiPolygon") {
-          boundaryRef.current = feature.geometry.coordinates;
+          setBoundary(feature.geometry.coordinates);
         }
       })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    async function fetchMonthly() {
+    async function fetchClimateData() {
       try {
         const variable =
           activeLayer === "rainfall"
@@ -222,11 +222,11 @@ export default function IndiaMap({
         const response = await climateAPI.getMonthlyData(year, month, variable);
         setData(response.data.filter((d: MonthlyDataPoint) => d.lat && d.lon));
       } catch (err) {
-        console.warn("Could not fetch monthly climate data:", err);
+        console.warn("Could not fetch climate data:", err);
         setData([]);
       }
     }
-    fetchMonthly();
+    fetchClimateData();
   }, [year, month, activeLayer]);
 
   useEffect(() => {
@@ -259,6 +259,7 @@ export default function IndiaMap({
       mapRef.current = null;
       setMapLoaded(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -290,149 +291,51 @@ export default function IndiaMap({
     url: string,
     coords: [[number, number], [number, number], [number, number], [number, number]],
   ) {
-    if (map.getLayer("climate-layer")) map.removeLayer("climate-layer");
-    if (map.getSource("climate")) map.removeSource("climate");
+    const source = map.getSource("climate") as any;
+    if (source && source.updateImage) {
+      source.updateImage({ url, coordinates: coords });
+    } else {
+      if (map.getLayer("climate-layer")) map.removeLayer("climate-layer");
+      if (map.getSource("climate")) map.removeSource("climate");
 
-    map.addSource("climate", {
-      type: "image",
-      url,
-      coordinates: coords,
-    });
-    map.addLayer(
-      { id: "climate-layer", type: "raster", source: "climate" },
-      "labels-layer",
-    );
+      map.addSource("climate", {
+        type: "image",
+        url,
+        coordinates: coords,
+      });
+      const beforeId = map.getLayer("labels-layer") ? "labels-layer" : undefined;
+      map.addLayer(
+        {
+          id: "climate-layer",
+          type: "raster",
+          source: "climate",
+          paint: {
+            "raster-fade-duration": 0,
+          },
+        },
+        beforeId,
+      );
+    }
   }
 
   useEffect(() => {
-    if (data.length < 2 || !mapRef.current || !mapLoaded) return;
+    if (!mapRef.current || !mapLoaded) return;
+    if (visMode !== "idw" && data.length < 2) return;
 
-    const lats = Array.from(new Set(data.map((d) => d.lat))).sort(
-      (a, b) => a - b,
-    );
-    const lons = Array.from(new Set(data.map((d) => d.lon))).sort(
-      (a, b) => a - b,
-    );
-    const rows = lats.length;
-    const cols = lons.length;
-    const minLat = lats[0],
-      maxLat = lats[rows - 1];
-    const minLon = lons[0],
-      maxLon = lons[cols - 1];
-    const lonMap = new Map(lons.map((v, i) => [v, i]));
-    const latMap = new Map(lats.map((v, i) => [v, rows - 1 - i]));
-    const isRain = activeLayer === "rainfall";
-    const colorFn = isRain ? rainfallColor : (v: number) => tempColor(v, activeLayer);
+    let minLat = 6.5, maxLat = 37.0;
+    let minLon = 66.5, maxLon = 100.0;
 
-    const up = 8;
-    const w = cols * up,
-      h = rows * up;
-    const cvs = document.createElement("canvas");
-    cvs.width = w;
-    cvs.height = h;
-    const ctx = cvs.getContext("2d")!;
-
-    const mer = (lat: number) =>
-      Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
-    const merY = lats.map(mer);
-    const minMY = merY[0],
-      maxMY = merY[rows - 1];
-    const myRng = maxMY - minMY;
-    const latToY = (lat: number, hh: number) =>
-      hh - ((mer(lat) - minMY) / myRng) * hh;
-
-    const rings = boundaryRef.current;
-    if (rings) {
-      ctx.save();
-      ctx.beginPath();
-      for (const polygon of rings) {
-        for (const ring of polygon) {
-          if (ring.length < 3) continue;
-          const sx =
-            ((ring[0][0] as number) - minLon) / (maxLon - minLon) * w;
-          const sy = latToY(ring[0][1] as number, h);
-          ctx.moveTo(sx, sy);
-          for (let i = 1; i < ring.length; i++) {
-            const px =
-              ((ring[i][0] as number) - minLon) / (maxLon - minLon) * w;
-            const py = latToY(ring[i][1] as number, h);
-            ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-        }
-      }
-      ctx.clip("evenodd");
-    }
-
-    if (visMode === "raw_grid") {
-      for (const d of data) {
-        const col = lonMap.get(d.lon);
-        const row = latMap.get(d.lat);
-        if (col === undefined || row === undefined) continue;
-        const value = isRain
-          ? d.rainfall
-          : activeLayer === "maxTemp"
-            ? d.maxTemp
-            : d.minTemp;
-        if (value === null || value < 0) continue;
-        ctx.fillStyle = colorFn(value);
-        const y0 = latToY(d.lat, h);
-        const nextLatIdx = rows - 2 - row;
-        const nextLat =
-          nextLatIdx >= 0
-            ? lats[nextLatIdx]
-            : lats[0] - (lats[1] - lats[0]);
-        const y1 = latToY(nextLat, h);
-        ctx.fillRect(
-          col * up,
-          Math.round(y0),
-          up,
-          Math.round(y1) - Math.round(y0),
-        );
-      }
-    } else {
-      const outW = cols * 2;
-      const outH = rows * 2;
-      const bounds = { minLat, maxLat, minLon, maxLon };
-      let values: number[][];
-
-      if (visMode === "idw") {
-        values = idwGridMercator(data, isRain, outW, outH, bounds);
-      } else if (visMode === "kriging") {
-        values = krigingGridMercator(data, isRain, outW, outH, bounds);
-      } else {
-        const smooth = idwGridMercator(data, isRain, outW, outH, bounds);
-        const breaks =
-          activeLayer === "rainfall"
-            ? [0, 5, 15, 30, 60, 100, 150, 250, 400, 600]
-            : activeLayer === "minTemp"
-              ? [5, 10, 15, 20, 25, 30]
-              : [20, 25, 30, 35, 38, 40];
-        values = classifyGrid(smooth, breaks);
-      }
-
-      const scaleX = w / outW;
-      const scaleY = h / outH;
-      for (let py = 0; py < outH; py++) {
-        for (let px = 0; px < outW; px++) {
-          const v = values[py][px];
-          if (v === -999 || v === undefined) continue;
-          ctx.fillStyle = visMode === "contour"
-            ? contourBandColor(v, activeLayer)
-            : colorFn(v);
-          ctx.fillRect(
-            Math.round(px * scaleX),
-            Math.round(py * scaleY),
-            Math.ceil(scaleX),
-            Math.ceil(scaleY),
-          );
-        }
+    if (visMode !== "idw" && data.length >= 2) {
+      const lats = Array.from(new Set(data.map((d) => d.lat))).sort((a, b) => a - b);
+      const lons = Array.from(new Set(data.map((d) => d.lon))).sort((a, b) => a - b);
+      if (lats.length > 0 && lons.length > 0) {
+        minLat = lats[0];
+        maxLat = lats[lats.length - 1];
+        minLon = lons[0];
+        maxLon = lons[lons.length - 1];
       }
     }
 
-    if (rings) ctx.restore();
-
-    const imageUrl = cvs.toDataURL("image/png");
     const coords: [[number, number], [number, number], [number, number], [number, number]] = [
       [minLon, maxLat],
       [maxLon, maxLat],
@@ -440,12 +343,171 @@ export default function IndiaMap({
       [minLon, minLat],
     ];
 
-    climateUrlRef.current = imageUrl;
-    climateCoordsRef.current = coords;
+    if (visMode === "idw") {
+      const formattedMonth = month < 10 ? `0${month}` : `${month}`;
+      const dateStr = `${year}-${formattedMonth}`;
+      const dbVariable =
+        activeLayer === "rainfall"
+          ? "rainfall"
+          : activeLayer === "maxTemp"
+            ? "max_temp"
+            : "min_temp";
+      const serverUrl = climateAPI.getRasterUrl(dateStr, dbVariable);
 
-    const map = mapRef.current;
-    addClimateOverlay(map, imageUrl, coords);
-  }, [data, activeLayer, visMode, mapLoaded]);
+      const w = 400;
+      const h = 400;
+      const cvs = document.createElement("canvas");
+      cvs.width = w;
+      cvs.height = h;
+      const ctx = cvs.getContext("2d")!;
+
+      const merVal = (lat: number) =>
+        Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+      const minMY = merVal(minLat);
+      const maxMY = merVal(maxLat);
+      const myRng = maxMY - minMY;
+      const latToY = (lat: number, hh: number) => hh - ((merVal(lat) - minMY) / myRng) * hh;
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = serverUrl;
+      img.onload = () => {
+        ctx.clearRect(0, 0, w, h);
+        const rings = boundary;
+        if (rings) {
+          ctx.save();
+          ctx.beginPath();
+          for (const polygon of rings) {
+            for (const ring of polygon) {
+              if (ring.length < 3) continue;
+              const sx = ((ring[0][0] as number) - minLon) / (maxLon - minLon) * w;
+              const sy = latToY(ring[0][1] as number, h);
+              ctx.moveTo(sx, sy);
+              for (let i = 1; i < ring.length; i++) {
+                const px = ((ring[i][0] as number) - minLon) / (maxLon - minLon) * w;
+                const py = latToY(ring[i][1] as number, h);
+                ctx.lineTo(px, py);
+              }
+              ctx.closePath();
+            }
+          }
+          ctx.clip("evenodd");
+        }
+
+        ctx.drawImage(img, 0, 0, w, h);
+        if (rings) ctx.restore();
+
+        const clippedUrl = cvs.toDataURL("image/png");
+        climateUrlRef.current = clippedUrl;
+        climateCoordsRef.current = coords;
+        if (mapRef.current && mapLoaded) {
+          addClimateOverlay(mapRef.current, clippedUrl, coords);
+        }
+      };
+      img.onerror = (err) => {
+        console.warn("Failed to load climate raster image:", err);
+      };
+    } else {
+      const lats = Array.from(new Set(data.map((d) => d.lat))).sort((a, b) => a - b);
+      const lons = Array.from(new Set(data.map((d) => d.lon))).sort((a, b) => a - b);
+      const rows = lats.length;
+      const cols = lons.length;
+      const lonMap = new Map(lons.map((v, i) => [v, i]));
+      const latMap = new Map(lats.map((v, i) => [v, rows - 1 - i]));
+      const isRain = activeLayer === "rainfall";
+      const colorFn = isRain ? rainfallColor : (v: number) => tempColor(v, activeLayer);
+
+      const up = 8;
+      const w = cols * up, h = rows * up;
+      const cvs = document.createElement("canvas");
+      cvs.width = w;
+      cvs.height = h;
+      const ctx = cvs.getContext("2d")!;
+
+      const mer = (lat: number) =>
+        Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+      const merY = lats.map(mer);
+      const minMY = merY[0], maxMY = merY[rows - 1];
+      const myRng = maxMY - minMY;
+      const latToY = (lat: number, hh: number) => hh - ((mer(lat) - minMY) / myRng) * hh;
+
+      const rings = boundary;
+      if (rings) {
+        ctx.save();
+        ctx.beginPath();
+        for (const polygon of rings) {
+          for (const ring of polygon) {
+            if (ring.length < 3) continue;
+            const sx = ((ring[0][0] as number) - minLon) / (maxLon - minLon) * w;
+            const sy = latToY(ring[0][1] as number, h);
+            ctx.moveTo(sx, sy);
+            for (let i = 1; i < ring.length; i++) {
+              const px = ((ring[i][0] as number) - minLon) / (maxLon - minLon) * w;
+              const py = latToY(ring[i][1] as number, h);
+              ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+          }
+        }
+        ctx.clip("evenodd");
+      }
+
+      if (visMode === "raw_grid") {
+        for (const d of data) {
+          const col = lonMap.get(d.lon);
+          const row = latMap.get(d.lat);
+          if (col === undefined || row === undefined) continue;
+          const value = isRain ? d.rainfall : activeLayer === "maxTemp" ? d.maxTemp : d.minTemp;
+          if (value === null || value < 0) continue;
+          ctx.fillStyle = colorFn(value);
+          const y0 = latToY(d.lat, h);
+          const nextLatIdx = rows - 2 - row;
+          const nextLat = nextLatIdx >= 0 ? lats[nextLatIdx] : lats[0] - (lats[1] - lats[0]);
+          const y1 = latToY(nextLat, h);
+          ctx.fillRect(col * up, Math.round(y0), up, Math.round(y1) - Math.round(y0));
+        }
+      } else {
+        const outW = cols * 2;
+        const outH = rows * 2;
+        const bounds = { minLat, maxLat, minLon, maxLon };
+        let values: number[][];
+
+        if (visMode === "kriging") {
+          values = krigingGridMercator(data, isRain, outW, outH, bounds);
+        } else {
+          const smooth = idwGridMercator(data, isRain, outW, outH, bounds);
+          const breaks =
+            activeLayer === "rainfall"
+              ? [0, 5, 15, 30, 60, 100, 150, 250, 400, 600]
+              : activeLayer === "minTemp"
+                ? [5, 10, 15, 20, 25, 30]
+                : [20, 25, 30, 35, 38, 40];
+          values = classifyGrid(smooth, breaks);
+        }
+
+        const scaleX = w / outW;
+        const scaleY = h / outH;
+        for (let py = 0; py < outH; py++) {
+          for (let px = 0; px < outW; px++) {
+            const v = values[py][px];
+            if (v === -999 || v === undefined) continue;
+            ctx.fillStyle = visMode === "contour" ? contourBandColor(v, activeLayer) : colorFn(v);
+            ctx.fillRect(Math.round(px * scaleX), Math.round(py * scaleY), Math.ceil(scaleX), Math.ceil(scaleY));
+          }
+        }
+      }
+
+      if (rings) ctx.restore();
+      const imageUrl = cvs.toDataURL("image/png");
+      climateUrlRef.current = imageUrl;
+      climateCoordsRef.current = coords;
+
+      const map = mapRef.current;
+      if (map && mapLoaded) {
+        addClimateOverlay(map, imageUrl, coords);
+      }
+    }
+  }, [data, activeLayer, visMode, mapLoaded, year, month, boundary]);
 
   useEffect(() => {
     const map = mapRef.current;

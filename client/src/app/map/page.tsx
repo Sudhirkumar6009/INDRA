@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store';
 import type { MapLayer, BaseMapId, VisMode } from '@/types';
+import { climateAPI } from '@/services/api';
 
 const IndiaMap = dynamic(() => import('@/components/maps/IndiaMap'), { ssr: false });
 
@@ -41,7 +42,7 @@ export default function MapPage() {
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [baseMap, setBaseMap] = useState<BaseMapId>('clear_view');
-  const [visMode, setVisMode] = useState<VisMode>('raw_grid');
+  const [visMode, setVisMode] = useState<VisMode>('idw');
 
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-black">
@@ -175,6 +176,7 @@ export default function MapPage() {
           </button>
         ))}
       </div>
+
     </div>
   );
 }

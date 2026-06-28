@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INDRA — Smooth Weather Map</title>
+  <meta name="description"
+    content="INDRA Climate Intelligence: Smooth IDW-interpolated weather visualization for India — Rainfall, Max Temp, Min Temp overlays.">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0a0a14;
+      color: #e2e8f0;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* ── Top Controls Bar ────────────────────────────────────────── */
+    #controls {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(10, 10, 20, 0.88);
+      padding: 8px 12px;
+      border-radius: 14px;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    #controls button {
+      padding: 8px 18px;
+      border: 1px solid rgba(100, 116, 139, 0.25);
+      border-radius: 10px;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+    }
+
+    #controls button:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.3);
+      color: #c7d2fe;
+    }
+
+    #controls button.active {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      border-color: #6366f1;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+
+    #date-input {
+      padding: 8px 12px;
+      border: 1px solid rgba(100, 116, 139, 0.25);
+      border-radius: 10px;
+      background: rgba(30, 30, 50, 0.8);
+      color: #e2e8f0;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #date-input:focus {
+      border-color: #6366f1;
+    }
+
+    /* ── Legend Panel ─────────────────────────────────────────────── */
+    #legend {
+      position: absolute;
+      bottom: 32px;
+      right: 16px;
+      z-index: 1000;
+      background: rgba(10, 10, 20, 0.88);
+      padding: 16px 20px;
+      border-radius: 14px;
+      min-width: 180px;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    #legend-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    #legend-bar {
+      width: 100%;
+      height: 14px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+
+    #legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .opacity-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .opacity-control label {
+      font-size: 11px;
+      color: #64748b;
+      white-space: nowrap;
+    }
+
+    .opacity-control input[type="range"] {
+      flex: 1;
+      height: 4px;
+      accent-color: #6366f1;
+      cursor: pointer;
+    }
+
+    .opacity-control .value {
+      font-size: 11px;
+      color: #a5b4fc;
+      font-weight: 600;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ── Loading Overlay ─────────────────────────────────────────── */
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2000;
+      background: rgba(10, 10, 20, 0.92);
+      color: #e2e8f0;
+      padding: 16px 32px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #loading.visible {
+      display: flex;
+    }
+
+    #progress-bar-container {
+      width: 200px;
+      height: 4px;
+      background: rgba(100, 116, 139, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4f46e5, #6366f1);
+      border-radius: 2px;
+      transition: width 0.15s ease;
+    }
+
+    /* ── Hover Tooltip ───────────────────────────────────────────── */
+    #hover-tooltip {
+      position: absolute;
+      z-index: 1500;
+      background: rgba(10, 10, 20, 0.92);
+      color: #e2e8f0;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      pointer-events: none;
+      display: none;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      white-space: nowrap;
+      transform: translate(16px, -50%);
+    }
+
+    #hover-tooltip.visible {
+      display: block;
+    }
+
+    .tooltip-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tooltip-row+.tooltip-row {
+      margin-top: 3px;
+    }
+
+    .tooltip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* ── Point Count Badge ───────────────────────────────────────── */
+    #point-count {
+      position: absolute;
+      bottom: 32px;
+      left: 16px;
+      z-index: 1000;
+      background: rgba(10, 10, 20, 0.88);
+      padding: 10px 16px;
+      border-radius: 14px;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      font-size: 11px;
+      color: #64748b;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    #point-count strong {
+      color: #a5b4fc;
+      font-weight: 700;
+    }
+
+    /* ── Leaflet overrides ───────────────────────────────────────── */
+    .leaflet-container {
+      background: #0a0a1a;
+    }
+
+    .leaflet-control-zoom a {
+      background: rgba(10, 10, 20, 0.88) !important;
+      color: #e2e8f0 !important;
+      border-color: rgba(100, 116, 139, 0.2) !important;
+      backdrop-filter: blur(16px);
+    }
+
+    .leaflet-control-zoom a:hover {
+      background: rgba(30, 30, 50, 0.9) !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Top Controls ────────────────────────────────────────────── -->
+  <div id="controls">
+    <button id="btn-rain" class="active" onclick="switchLayer('rainfall')">🌧️ Rainfall</button>
+    <button id="btn-max" onclick="switchLayer('max_temp')">🌡️ Max Temp</button>
+    <button id="btn-min" onclick="switchLayer('min_temp')">❄️ Min Temp</button>
+    <input type="date" id="date-input" value="2025-06-28" onchange="reload()" />
+  </div>
+
+  <!-- ── Map Container ───────────────────────────────────────────── -->
+  <div id="map"></div>
+
+  <!-- ── Loading Overlay ─────────────────────────────────────────── -->
+  <div id="loading">
+    <span id="loading-text">Loading data…</span>
+    <div id="progress-bar-container">
+      <div id="progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- ── Hover Tooltip ───────────────────────────────────────────── -->
+  <div id="hover-tooltip">
+    <div class="tooltip-row">
+      <span class="tooltip-dot" style="background:#60a5fa"></span>
+      <span id="tt-lat">--</span>
+    </div>
+    <div class="tooltip-row">
+      <span class="tooltip-dot" style="background:#34d399"></span>
+      <span id="tt-lon">--</span>
+    </div>
+    <div class="tooltip-row">
+      <span class="tooltip-dot" id="tt-val-dot" style="background:#a5b4fc"></span>
+      <span id="tt-val">--</span>
+    </div>
+  </div>
+
+  <!-- ── Legend Panel ─────────────────────────────────────────────── -->
+  <div id="legend">
+    <div id="legend-title">Rainfall (mm)</div>
+    <canvas id="legend-bar" height="14"></canvas>
+    <div id="legend-labels">
+      <span id="leg-min">0</span>
+      <span id="leg-max">200</span>
+    </div>
+    <div class="opacity-control">
+      <label>Opacity</label>
+      <input type="range" id="opacity-slider" min="0" max="100" value="75" oninput="updateOpacity(this.value)" />
+      <span class="value" id="opacity-val">75%</span>
+    </div>
+  </div>
+
+  <!-- ── Point Count Badge ───────────────────────────────────────── -->
+  <div id="point-count">
+    <strong id="pc-num">0</strong> data points loaded
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // ═══════════════════════════════════════════════════════════════════
+    // CONFIG — Change API_BASE to your FastAPI server URL
+    // ═══════════════════════════════════════════════════════════════════
+    const API_BASE = 'http://localhost:8000/api/v1/weather';
+
+    // India bounding box for the interpolation grid
+    const INDIA_BOUNDS = { minLon: 66.5, maxLon: 100, minLat: 6.5, maxLat: 37 };
+
+    // Grid resolution: higher = smoother but slower
+    // 400×400 is the sweet spot for quality vs performance
+    const GRID_W = 400;
+    const GRID_H = 400;
+
+    // IDW power: 2 = standard smooth, 3 = sharper around stations
+    const IDW_POWER = 2;
+
+    // Number of nearest neighbors to use in IDW
+    const K_NEIGHBORS = 8;
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // COLORMAPS — Each stop: [fraction 0-1, R, G, B, Alpha 0-255]
+    // ═══════════════════════════════════════════════════════════════════
+    const COLORMAPS = {
+      rainfall: {
+        title: 'Rainfall (mm)',
+        minVal: 0,
+        maxVal: 200,
+        stops: [
+          [0.00, 255, 255, 255, 0],   // transparent (no rain)
+          [0.02, 220, 235, 255, 30],   // barely visible blue tint
+          [0.05, 173, 216, 255, 60],   // very light blue
+          [0.10, 135, 200, 255, 90],   // light blue
+          [0.20, 100, 180, 255, 130],   // sky blue
+          [0.30, 60, 150, 255, 160],   // medium blue
+          [0.45, 30, 120, 240, 180],   // dodger blue
+          [0.60, 0, 80, 200, 195],   // deep blue
+          [0.75, 0, 50, 170, 210],   // navy blue
+          [0.85, 40, 20, 160, 225],   // dark blue-purple
+          [1.00, 100, 0, 200, 240],   // purple (extreme)
+        ],
+      },
+      max_temp: {
+        title: 'Max Temp (°C)',
+        minVal: 20,
+        maxVal: 48,
+        stops: [
+          [0.00, 200, 240, 200, 60],   // pale green
+          [0.10, 220, 240, 140, 100],   // yellow-green
+          [0.20, 255, 240, 80, 140],   // bright yellow
+          [0.35, 255, 200, 50, 165],   // yellow-orange
+          [0.50, 255, 150, 20, 185],   // orange
+          [0.65, 240, 100, 0, 200],   // deep orange
+          [0.80, 220, 50, 0, 215],   // red-orange
+          [0.90, 190, 20, 0, 230],   // red
+          [1.00, 140, 0, 0, 240],   // dark red
+        ],
+      },
+      min_temp: {
+        title: 'Min Temp (°C)',
+        minVal: 8,
+        maxVal: 34,
+        stops: [
+          [0.00, 180, 240, 255, 70],   // pale cyan
+          [0.15, 130, 210, 255, 110],   // light blue
+          [0.30, 100, 190, 250, 140],   // sky blue
+          [0.50, 60, 150, 230, 170],   // medium blue
+          [0.70, 80, 110, 210, 195],   // blue-indigo
+          [0.85, 110, 70, 200, 215],   // blue-purple
+          [1.00, 150, 50, 180, 230],   // purple
+        ],
+      },
+    };
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // MAP INITIALIZATION
+    // ═══════════════════════════════════════════════════════════════════
+    const map = L.map('map', {
+      center: [22, 82],
+      zoom: 5,
+      zoomControl: true,
+      minZoom: 4,
+      maxZoom: 10,
+    });
+
+    // Dark basemap — perfect for weather overlays
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/">OSM</a> © <a href="https://carto.com/">CARTO</a> | INDRA Climate Intelligence',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(map);
+
+    let overlayLayer = null;
+    let currentMode = 'rainfall';
+    let currentOpacity = 0.75;
+    let lastGrid = null;  // cached grid for hover tooltip lookups
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // WEB WORKER — IDW computation runs on a background thread
+    // Embedded as a Blob URL so it works from file:// without a server.
+    // (Browsers block new Worker('external-file.js') from file:// origin)
+    // ═══════════════════════════════════════════════════════════════════
+    let idwWorker = null;
+
+    // The entire worker source is embedded here as a template literal.
+    const IDW_WORKER_SRC = `
+self.onmessage = function (e) {
+  var data = e.data;
+  var points = data.points;
+  var gridW = data.gridW;
+  var gridH = data.gridH;
+  var bounds = data.bounds;
+  var idwPower = data.idwPower;
+  var kNeighbors = data.kNeighbors;
+
+  var minLon = bounds.minLon, maxLon = bounds.maxLon;
+  var minLat = bounds.minLat, maxLat = bounds.maxLat;
+  var lonStep = (maxLon - minLon) / gridW;
+  var latStep = (maxLat - minLat) / gridH;
+
+  var n = points.length;
+  var px = new Float64Array(n);
+  var py = new Float64Array(n);
+  var pv = new Float64Array(n);
+  for (var i = 0; i < n; i++) {
+    px[i] = points[i].lon;
+    py[i] = points[i].lat;
+    pv[i] = points[i].value;
+  }
+
+  var grid = new Float32Array(gridW * gridH);
+
+  for (var row = 0; row < gridH; row++) {
+    var lat = maxLat - row * latStep;
+
+    for (var col = 0; col < gridW; col++) {
+      var lon = minLon + col * lonStep;
+
+      var exactHit = -1;
+      var dists = new Float64Array(n);
+      for (var i = 0; i < n; i++) {
+        var dx = px[i] - lon;
+        var dy = py[i] - lat;
+        dists[i] = dx * dx + dy * dy;
+        if (dists[i] < 1e-6) exactHit = i;
+      }
+
+      if (exactHit >= 0) {
+        grid[row * gridW + col] = pv[exactHit];
+        continue;
+      }
+
+      var k = Math.min(kNeighbors, n);
+      var nearest = new Array(k);
+      var nearDist = new Float64Array(k);
+      for (var j = 0; j < k; j++) nearDist[j] = Infinity;
+
+      for (var i = 0; i < n; i++) {
+        var worstIdx = 0;
+        for (var j = 1; j < k; j++) {
+          if (nearDist[j] > nearDist[worstIdx]) worstIdx = j;
+        }
+        if (dists[i] < nearDist[worstIdx]) {
+          nearDist[worstIdx] = dists[i];
+          nearest[worstIdx] = i;
+        }
+      }
+
+      var weightSum = 0, valueSum = 0;
+      for (var j = 0; j < k; j++) {
+        if (nearDist[j] === Infinity) continue;
+        var dist = Math.sqrt(nearDist[j]);
+        var w = 1 / Math.pow(dist, idwPower);
+        weightSum += w;
+        valueSum += w * pv[nearest[j]];
+      }
+      grid[row * gridW + col] = weightSum > 0 ? valueSum / weightSum : 0;
+    }
+
+    if (row % 40 === 0) {
+      self.postMessage({ type: 'progress', percent: Math.round((row / gridH) * 100) });
+    }
+  }
+
+  // Gaussian blur (3×3 kernel) for smooth gradients
+  var blurred = new Float32Array(gridW * gridH);
+  var kernel = [1, 2, 1, 2, 4, 2, 1, 2, 1];
+  for (var row = 0; row < gridH; row++) {
+    for (var col = 0; col < gridW; col++) {
+      var sum = 0, wSum = 0;
+      for (var ky = -1; ky <= 1; ky++) {
+        for (var kx = -1; kx <= 1; kx++) {
+          var r = row + ky, c = col + kx;
+          if (r >= 0 && r < gridH && c >= 0 && c < gridW) {
+            var w = kernel[(ky + 1) * 3 + (kx + 1)];
+            sum += grid[r * gridW + c] * w;
+            wSum += w;
+          }
+        }
+      }
+      blurred[row * gridW + col] = sum / wSum;
+    }
+  }
+
+  self.postMessage({ type: 'result', grid: blurred.buffer }, [blurred.buffer]);
+};
+`;
+
+    function getOrCreateWorker() {
+      if (!idwWorker) {
+        // Create a Blob URL from the embedded source — works from any origin including file://
+        const blob = new Blob([IDW_WORKER_SRC], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+        idwWorker = new Worker(blobUrl);
+        // Revoke the URL immediately after creating the Worker (the Worker holds its own reference)
+        URL.revokeObjectURL(blobUrl);
+      }
+      return idwWorker;
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // COLORMAP UTILITIES
+    // ═══════════════════════════════════════════════════════════════════
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    /** Sample the colormap at a normalized position t ∈ [0, 1] → [R, G, B, A] */
+    function sampleColormap(stops, t) {
+      t = Math.max(0, Math.min(1, t));
+      for (let i = 1; i < stops.length; i++) {
+        if (t <= stops[i][0]) {
+          const t0 = stops[i - 1][0], t1 = stops[i][0];
+          const f = (t - t0) / (t1 - t0);
+          return [
+            Math.round(lerp(stops[i - 1][1], stops[i][1], f)),
+            Math.round(lerp(stops[i - 1][2], stops[i][2], f)),
+            Math.round(lerp(stops[i - 1][3], stops[i][3], f)),
+            Math.round(lerp(stops[i - 1][4], stops[i][4], f)),
+          ];
+        }
+      }
+      const last = stops[stops.length - 1];
+      return [last[1], last[2], last[3], last[4]];
+    }
+
+    /** Convert the Float32 IDW grid into a canvas with colormap applied */
+    function gridToCanvas(grid, cm) {
+      const canvas = document.createElement('canvas');
+      canvas.width = GRID_W;
+      canvas.height = GRID_H;
+      const ctx = canvas.getContext('2d');
+      const img = ctx.createImageData(GRID_W, GRID_H);
+      const range = cm.maxVal - cm.minVal;
+
+      for (let i = 0; i < grid.length; i++) {
+        const t = (grid[i] - cm.minVal) / range;
+        const [r, g, b, a] = sampleColormap(cm.stops, t);
+        img.data[i * 4] = r;
+        img.data[i * 4 + 1] = g;
+        img.data[i * 4 + 2] = b;
+        img.data[i * 4 + 3] = a;
+      }
+
+      ctx.putImageData(img, 0, 0);
+      return canvas;
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // LEAFLET IMAGE OVERLAY
+    // ═══════════════════════════════════════════════════════════════════
+
+    function canvasToLeafletOverlay(canvas) {
+      const { minLon, maxLon, minLat, maxLat } = INDIA_BOUNDS;
+      const bounds = [[minLat, minLon], [maxLat, maxLon]];
+      const url = canvas.toDataURL('image/png');
+      return L.imageOverlay(url, bounds, {
+        opacity: currentOpacity,
+        interactive: false,
+      });
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // LEGEND RENDERING
+    // ═══════════════════════════════════════════════════════════════════
+
+    function renderLegend(cm) {
+      document.getElementById('legend-title').textContent = cm.title;
+      document.getElementById('leg-min').textContent = cm.minVal;
+      document.getElementById('leg-max').textContent = cm.maxVal;
+
+      const bar = document.getElementById('legend-bar');
+      // Set canvas width to actual rendered width for sharp rendering
+      const displayWidth = bar.offsetWidth || 200;
+      bar.width = displayWidth * 2;  // 2x for retina
+      bar.height = 28;
+      bar.style.width = displayWidth + 'px';
+      bar.style.height = '14px';
+
+      const ctx = bar.getContext('2d');
+      ctx.scale(2, 2);
+
+      const grad = ctx.createLinearGradient(0, 0, displayWidth, 0);
+      for (const [t, r, g, b, a] of cm.stops) {
+        grad.addColorStop(t, `rgba(${r},${g},${b},${a / 255})`);
+      }
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, displayWidth, 14, 6);
+      ctx.fill();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // DATA FETCH + IDW + RENDER PIPELINE
+    // ═══════════════════════════════════════════════════════════════════
+
+    async function fetchAndRender(mode) {
+      const date = document.getElementById('date-input').value;
+      const loading = document.getElementById('loading');
+      const loadingText = document.getElementById('loading-text');
+      const progressBar = document.getElementById('progress-bar');
+
+      loading.classList.add('visible');
+      loadingText.textContent = 'Fetching data…';
+      progressBar.style.width = '0%';
+
+      try {
+        // ── 1. Fetch GeoJSON from backend ──
+        let url;
+        if (mode === 'rainfall') {
+          url = `${API_BASE}/rainfall?date=${date}`;
+        } else if (mode === 'max_temp') {
+          url = `${API_BASE}/temperature?date=${date}&field=max`;
+        } else {
+          url = `${API_BASE}/temperature?date=${date}&field=min`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        const geojson = await res.json();
+
+        // Parse GeoJSON features into simple {lon, lat, value} objects
+        const points = geojson.features.map(f => ({
+          lon: f.geometry.coordinates[0],
+          lat: f.geometry.coordinates[1],
+          value: f.properties.value,
+        }));
+
+        // Update point count badge
+        document.getElementById('pc-num').textContent = points.length.toLocaleString();
+
+        if (points.length === 0) {
+          loading.classList.remove('visible');
+          alert('No data returned for this date. Try a different date.');
+          return;
+        }
+
+        console.log(`[INDRA] Loaded ${points.length} points for ${mode} on ${date}`);
+
+        // ── 2. Run IDW interpolation in Web Worker ──
+        loadingText.textContent = 'Computing interpolation…';
+
+        const grid = await new Promise((resolve, reject) => {
+          const worker = getOrCreateWorker();
+
+          worker.onmessage = (e) => {
+            if (e.data.type === 'progress') {
+              progressBar.style.width = e.data.percent + '%';
+              loadingText.textContent = `Computing interpolation… ${e.data.percent}%`;
+            } else if (e.data.type === 'result') {
+              resolve(new Float32Array(e.data.grid));
+            }
+          };
+
+          worker.onerror = (err) => {
+            console.error('[INDRA] Worker error:', err);
+            reject(err);
+          };
+
+          worker.postMessage({
+            points,
+            gridW: GRID_W,
+            gridH: GRID_H,
+            bounds: INDIA_BOUNDS,
+            idwPower: IDW_POWER,
+            kNeighbors: K_NEIGHBORS,
+          });
+        });
+
+        // Cache the grid for hover tooltip lookups
+        lastGrid = grid;
+
+        // ── 3. Colormap → Canvas → Leaflet Overlay ──
+        loadingText.textContent = 'Rendering overlay…';
+        progressBar.style.width = '100%';
+
+        const cm = COLORMAPS[mode];
+        const canvas = gridToCanvas(grid, cm);
+
+        // Remove the old overlay and add the new one
+        if (overlayLayer) map.removeLayer(overlayLayer);
+        overlayLayer = canvasToLeafletOverlay(canvas);
+        overlayLayer.addTo(map);
+
+        // Render the legend bar
+        renderLegend(cm);
+
+      } catch (e) {
+        console.error('[INDRA] Error:', e);
+        alert('Failed to load data. Make sure the FastAPI server is running.\n\n' + e.message);
+      } finally {
+        loading.classList.remove('visible');
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // HOVER TOOLTIP — Shows interpolated value at cursor position
+    // ═══════════════════════════════════════════════════════════════════
+
+    map.on('mousemove', (e) => {
+      const tooltip = document.getElementById('hover-tooltip');
+
+      if (!lastGrid) {
+        tooltip.classList.remove('visible');
+        return;
+      }
+
+      const { lat, lng: lon } = e.latlng;
+      const { minLon, maxLon, minLat, maxLat } = INDIA_BOUNDS;
+
+      // Check if cursor is within the India bounds
+      if (lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
+        tooltip.classList.remove('visible');
+        return;
+      }
+
+      // Map lat/lon to grid cell
+      const col = Math.floor((lon - minLon) / (maxLon - minLon) * GRID_W);
+      const row = Math.floor((maxLat - lat) / (maxLat - minLat) * GRID_H);
+
+      if (row < 0 || row >= GRID_H || col < 0 || col >= GRID_W) {
+        tooltip.classList.remove('visible');
+        return;
+      }
+
+      const value = lastGrid[row * GRID_W + col];
+      const cm = COLORMAPS[currentMode];
+      const unit = currentMode === 'rainfall' ? ' mm' : ' °C';
+
+      // Update tooltip content
+      document.getElementById('tt-lat').textContent = lat.toFixed(4) + '°N';
+      document.getElementById('tt-lon').textContent = lon.toFixed(4) + '°E';
+      document.getElementById('tt-val').textContent = value.toFixed(1) + unit;
+
+      // Color the value dot based on the colormap
+      const t = (value - cm.minVal) / (cm.maxVal - cm.minVal);
+      const [r, g, b] = sampleColormap(cm.stops, t);
+      document.getElementById('tt-val-dot').style.background = `rgb(${r},${g},${b})`;
+
+      // Position tooltip near cursor
+      const point = e.containerPoint;
+      tooltip.style.left = point.x + 'px';
+      tooltip.style.top = point.y + 'px';
+      tooltip.classList.add('visible');
+    });
+
+    map.on('mouseout', () => {
+      document.getElementById('hover-tooltip').classList.remove('visible');
+    });
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // UI WIRING
+    // ═══════════════════════════════════════════════════════════════════
+
+    function switchLayer(mode) {
+      currentMode = mode;
+      // Update active button state
+      document.querySelectorAll('#controls button').forEach(b => b.classList.remove('active'));
+      const btnId = mode === 'rainfall' ? 'btn-rain' : mode === 'max_temp' ? 'btn-max' : 'btn-min';
+      document.getElementById(btnId).classList.add('active');
+      fetchAndRender(mode);
+    }
+
+    function reload() {
+      fetchAndRender(currentMode);
+    }
+
+    function updateOpacity(val) {
+      currentOpacity = val / 100;
+      document.getElementById('opacity-val').textContent = val + '%';
+      if (overlayLayer) {
+        overlayLayer.setOpacity(currentOpacity);
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // INITIAL LOAD
+    // ═══════════════════════════════════════════════════════════════════
+    fetchAndRender('rainfall');
+  </script>
+</body>
+
+</html>

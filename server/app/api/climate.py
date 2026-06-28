@@ -185,6 +185,8 @@ def get_grid_points(
             "rainfall": p.rainfall,
             "max_temp": p.max_temp,
             "min_temp": p.min_temp,
+            "maxTemp": p.max_temp,
+            "minTemp": p.min_temp,
         }
         for p in points
     ]

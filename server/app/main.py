@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import auth, climate, dashboard
+from app.api import auth, climate, dashboard, weather_geojson, weather_raster, weather_dates
 from app.database.db import Base, engine, init_postgis
 
 init_postgis()
@@ -15,7 +15,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    # Allow all origins for the standalone weather map HTML (file:// or different port)
+    # In production, restrict to settings.cors_origins_list
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,6 +26,9 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(climate.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
+app.include_router(weather_geojson.router, prefix="/api/v1")
+app.include_router(weather_raster.router, prefix="/api/v1")
+app.include_router(weather_dates.router, prefix="/api/v1")
 
 
 @app.get("/")
